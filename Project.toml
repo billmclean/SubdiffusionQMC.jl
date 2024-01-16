@@ -1,0 +1,4 @@
+name = "SubdiffusionQMC"
+uuid = "072f8508-fc03-4b3a-bf7a-215682c52175"
+authors = ["William McLean <w.mclean@unsw.edu.au>"]
+version = "0.1.0"
