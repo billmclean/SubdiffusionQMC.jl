@@ -1,0 +1,219 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amsthm}
+\usepackage[margin=2cm]{geometry}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\bs}[1]{\boldsymbol{#1}}
+\newcommand{\ud}{\mathrm{d}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%opening
+\title{Notes}
+\date{\today}
+\author{William McLean}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+\maketitle
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Generalised Crank--Nicolson scheme}
+We consider a (stiff) system of fractional ODEs,
+\[
+\bs{M}\partial_t^\alpha\bs{u}+\bs{A}\bs{u}=\bs{f}(t)
+    \quad\text{for $0\le t\le T$,}\quad\text{with $\bs{u}(0)=\bs{u}_0$,}
+\]
+typically obtained via spatial discretisation of a subdiffusion equation.
+For suitable time levels
+\[
+0=t_0<t_1<t_2<\cdots<t_N=T,
+\]
+we seek a continuous, piecewise-linear approximation
+\[
+\bs{u}(t)\approx\bs{U}(t)=\tau_n^{-1}[(t_n-t)\bs{U}^{n-1}+(t-t_{n-1})\bs{U}^n]
+\quad\text{for $t\in I_n$,}
+\]
+where $I_n=(t_{n-1},t_n)$ denotes the $n$th subinterval.  To determine $\bs{U}$,
+we require that
+\[
+\int_{I_n}\bigl(\bs{M}\partial_t^\alpha\bs{U}+\bs{A}\bs{U}\bigr)\,\ud t
+    =\int_{I_n}\bs{f}(t)\,\ud t\quad\text{for $1\le n\le N$,}
+\]
+with $\bs{U}^0=\bs{u}_0$.
+
+Observe that
+\[
+\int_{I_n}\bs{A}\bs{U}\,\ud t=\tau_n\bs{A}\bs{U}^{n-1/2}\quad\text{where}\quad
+\bs{U}^{n-1/2}=\frac{1}{\tau_n}\int_{I_n}\bs{U}\,\ud t
+    =\frac{1}{2}(\bs{U}^n+\bs{U}^{n-1}),
+\]
+and define likewise
+\[
+\bs{F}^{n-1/2}=\frac{1}{\tau_n}\int_{I_n}\bs{f}(t)\,\ud t.
+\]
+In this way,
+\[
+\int_{I_n}\bs{M}\partial_t^\alpha\bs{U}\,\ud t+\tau_n\bs{A}\bs{U}^{n-1/2}
+    =\tau_n\bs{F}^{n-1/2},
+\]
+and it remains to consider
+\[
+\int_{I_n}\bs{M}\partial_t^\alpha\bs{U}\,\ud t
+    =\int_{I_n}\bs{M}\mathcal{I}^{1-\alpha}\bs{U}'\,\ud t,
+\]
+where the fractional integral operator of order~$\beta>0$ is defined as usual by
+\[
+(\mathcal{I}^\beta v)(t)=\int_0^t\omega_\beta(t-s)v(s)\,\ud s
+\quad\text{where}\quad\omega_\beta(t)=\frac{t^{\beta-1}}{\Gamma(\beta)}.
+\]
+Let us put
+\[
+\Delta\bs{U}^n=\bs{U}^n-\bs{U}^{n-1},
+\]
+so that $\bs{U}'(t)=\tau_n^{-1}\Delta\bs{U}^n$ for $t\in I_n$. Thus,
+\[
+(\mathcal{I}^{1-\alpha}\bs{U}')(t)=\sum_{j=1}^{n-1}\int_{I_j}
+    \omega_{1-\alpha}(t-s)\tau_j^{-1}\Delta\bs{U}^j\,\ud s
+    +\int_{t_{n-1}}^t\omega_{1-\alpha}(t-s)\tau_n^{-1}\Delta\bs{U}^n\,\ud s,
+\]
+so, defining
+\[
+\omega^\alpha_{nn}=\frac{1}{\tau_n}\int_{I_n}\int_{t_{n-1}}^t
+    \omega_{1-\alpha}(t-s)\,\ud s\,\ud t>0
+\]
+and
+\[
+\omega^\alpha_{nj}=\frac{1}{\tau_n}\int_{I_n}\int_{I_j}
+    \omega_{1-\alpha}(t-s)\,\ud s\,\ud t>0,
+\]
+we have
+\[
+\int_{I_n}\mathcal{I}^{1-\alpha}\bs{U}'\,\ud t
+    =\omega^\alpha_{nn}\Delta\bs{U}^n
+    +\sum_{j=1}^{n-1}\omega^\alpha_{nj}\Delta\bs{U}^j.
+\]
+Since $\omega_\beta=\omega_{\beta+1}'$,
+\[
+\int_{I_j}\omega_{1-\alpha}(t-s)\,\ud s
+    =\omega_{2-\alpha}(t-t_{j-1})-\omega_{2-\alpha}(t-t_j)
+\]
+and
+\[
+\int_{t_{n-1}}^t\omega_{1-\alpha}(t-s)\,\ud s=\omega_{2-\alpha}(t-t_{n-1}),
+\]
+implying that
+\[
+\omega^\alpha_{nn}=\frac{\omega_{3-\alpha}(\tau_n)}{\tau_n}
+    =\frac{\tau_n^{1-\alpha}}{\Gamma(3-\alpha)}
+\]
+and
+\[
+\omega^\alpha_{nj}=\tau_n^{-1}\bigl[
+\omega_{3-\alpha}(t_n-t_{j-1})-\omega_{3-\alpha}(t_{n-1}-t_{j-1})
+-\omega_{3-\alpha}(t_n-t_j)-\omega_{3-\alpha}(t_{n-1}-t_j)\bigr].
+\]
+
+In the special case of a uniform mesh~$t_n=n\tau$,
+\[
+\omega^\alpha_{nn}=\frac{\tau^{1-\alpha}}{\Gamma(3-\alpha)}
+\]
+is independent of~$n$, and for $1\le j\le n-1$,
+\[
+\omega^\alpha_{nj}=\frac{\tau^{1-\alpha}}{\Gamma(3-\alpha)}\bigl[
+    (n-j+1)^{2-\alpha}-2(n-j)^{2-\alpha}+(n-j-1)^{2-\alpha}\bigr]
+\]
+depends only on the difference~$n-j$.  In the general case, we let
+\[
+D_{nj}=t_{n-1/2}-t_{j-1/2}\quad\text{and}\quad
+\delta_{nj}^\pm=\frac{\tau_n\pm\tau_j}{2D_{nj}},
+\]
+so that
+\begin{align*}
+t_n-t_{j-1}&=D_{nj}(1+\delta_{nj}^+),&
+t_{n-1}-t_{j-1}&=D_{nj}(1-\delta_{nj}^-),\\
+t_n-t_j&=D_{nj}(1+\delta_{nj}^-),&
+t_{n-1}-t_j&=D_{nj}(1-\delta_{nj}^+),
+\end{align*}
+to obtain
+\[
+\omega^\alpha_{nj}=\frac{\omega_{3-\alpha}(D_{nj})}{\tau_n}\bigl[
+ (1+\delta_{nj}^+)^{2-\alpha}-(1-\delta_{nj}^-)^{2-\alpha}
+-(1+\delta_{nj}^-)^{2-\alpha}+(1-\delta_{nj}^+)^{2-\alpha}\bigr].
+\]
+
+If $\delta_{nj}^\pm$ is small, then direct evaluation will lead to loss of
+precision due to roundoff.  We therefore consider the Taylor expansion
+\[
+(1+\delta)^{2-\alpha}=1+\sum_{m=1}^\infty a_m\delta^m
+\quad\text{for $|\delta|<1$,}\quad
+\quad\text{where}\quad
+a_m=\frac{2-\alpha}{1}\,\frac{1-\alpha}{2}\cdots\frac{3-\alpha-m}{m},
+\]
+and note that
+\[
+(1+\delta)^{2-\alpha}+(1-\delta)^{2-\alpha}
+    =2+\sum_{m=1}^\infty 2a_{2m}\delta^{2m},
+\]
+so
+\begin{equation}\label{eq: omega series}
+\omega^\alpha_{nj}=\frac{\omega_{3-\alpha}(D_{nj})}{\tau_n}\sum_{m=1}^\infty
+    C_m\bigl[(\delta_{nj}^+)^{2m}-(\delta_{nj}^-)^{2m}\bigr]
+\quad\text{where}\quad C_m=a_{2m}.
+\end{equation}
+Furthermore,
+\[
+\sum_{m=1}^\infty C_{2m}\bigl[(\delta_{nj}^+)^{2m}-(\delta_{nj}^-)^{2m}\bigr]
+    =\sum_{m=1}^\infty C_{2m}
+    \bigl[(\delta_{nj}^+)^m+|\delta_{nj}^-|^m\bigr]
+    \bigl[(\delta_{nj}^+)^m-|\delta_{nj}^-|^m\bigr],
+\]
+and we have
+\[
+(\delta_{nj}^+)^m-|\delta_{nj}^-|^m=(\delta_{nj}^+-|\delta_{nj}^-|)
+    \sum_{k=1}^m(\delta_{nj}^+)^{m-k}|\delta_{nj}^-|^{k-1}
+\quad\text{with}\quad
+\delta_{nj}^+-|\delta_{nj}^-|=\begin{cases}
+\tau_j&\text{if $\tau_n\ge\tau_j$,}\\
+\tau_n&\text{if $\tau_n<\tau_j$.}
+\end{cases}
+\]
+When $j=n-1$, since $D_{n,n-1}=\tfrac12(\tau_n+\tau_{n-1})$ we see that
+$\delta_{n,n-1}^+=1$ and thus
+\[
+\omega^\alpha_{n,n-1}=\frac{\omega_{3-\alpha}(D_{n,n-1})}{\tau_n}\bigl[
+    2^{2-\alpha}-(1-\delta_{n,n-1}^-)^{2-\alpha}
+    -(1+\delta_{n,n-1}^-)^{2-\alpha}\bigr]
+\]
+
+\begin{lemma}
+Assume that $0<\alpha<1$. Then, the coefficients in the
+representation~\eqref{eq: omega series} satisfy
+\[
+1>C_1>C_2>C_3>\cdots>0\quad\text{with}\quad
+\lim_{m\to\infty}\frac{C_m}{C_{m-1}}=1.
+\]
+\end{lemma}
+\begin{proof}
+Since
+\[
+C_1=a_2=\frac{2-\alpha}{1}\,\frac{1-\alpha}{2}=(1-\tfrac12\alpha)(1-\alpha)
+\]
+we see that $0<C_1<1$.  For $m\ge2$,
+\[
+\frac{C_m}{C_{m-1}}=\frac{a_{2m}}{a_{2m-2}}
+    =\frac{4-\alpha-2m}{2m-1}\,\frac{3-\alpha-2m}{2m}
+    =\frac{2m+\alpha-4}{2m-1}\,\frac{2m+\alpha-3}{2m},
+\]
+showing that $0<C_m/C_{m-1}<1$, because $4<2m+\alpha<2m$, and that
+$C_m/C_{m-1}\to1$.
+\end{proof}
+
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{document}
