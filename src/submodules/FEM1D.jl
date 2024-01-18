@@ -63,17 +63,4 @@ function mass_matrix(x::OVec64)
     SymTridiagonal(dv, ev)
 end
 
-function crank_nicolson!(U::OMat64, A::SymTridiagonal, F::OMat64, t::OVec64)
-    Nₜ = lastindex(t)
-    for n = 1:Nₜ
-	τ = t[n] - t[n-1]
-	B₊ = I + (τ/2) * A
-	B₋ = I - (τ/2) * A
-	rhs = B₋ * U[1:end-1,n-1] + (τ/2) * ( F[:,n-1] + F[:,n] )
-	U[0,n] = 0.0
-	U[1:end-1,n] = B₊ \ rhs
-	U[end,n] = 0.0
-    end
-end
-
 end # module
