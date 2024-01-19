@@ -3,24 +3,31 @@ import SubdiffusionQMC.TimeStepping: Taylor_coefficients!
 using PyPlot
 
 α = 0.5
-M = 10
-C = zeros(M)
+M = 8
+C = zeros(M+1)
 Taylor_coefficients!(C, α)
 
 δ = collect(range(0, 1/2, 201))
-S = similar(δ)
+Taylor_sum = similar(δ)
+error_bound = similar(δ)
+power_of_δ = similar(C)
 for j in eachindex(S)
     Σ = 0.0
-    power_of_δ = 1.0
-    for m in eachindex(C)
-	power_of_δ *= δ[j]^2
-	Σ += C[m] * power_of_δ
+    power_of_δ[1] = δ[j]^2
+    for m in 1:M
+	Σ += C[m] * power_of_δ[m]
+	power_of_δ[m+1] = power_of_δ[1] * power_of_δ[m]
     end
-    S[j] = 2 + Σ
+    error_bound[j] = C[M+1] * power_of_δ[M+1]
+    Taylor_sum[j] = 2 + Σ
 end
 
 figure(1)
 
-semilogy(δ, (1 .+ δ).^(2-α) + (1 .- δ).^(2-α) - S)
+error_bound = max.(error_bound, eps(Float64))
+actual_error = (1 .+ δ).^(2-α) + (1 .- δ).^(2-α) - Taylor_sum
+
+semilogy(δ, actual_error, δ, error_bound, "--")
+legend(("Error", "Error bound"))
 grid(true)
 title("Error in Taylor expansion with $M terms")
