@@ -152,31 +152,42 @@ a_m=\frac{2-\alpha}{1}\,\frac{1-\alpha}{2}\cdots\frac{3-\alpha-m}{m},
 and note that
 \[
 (1+\delta)^{2-\alpha}+(1-\delta)^{2-\alpha}
-    =2+\sum_{m=1}^\infty 2a_{2m}\delta^{2m},
+    =2+\sum_{m=1}^\infty C_m\delta^{2m},
+\quad\text{where}\quad C_m=2a_{2m},
 \]
 so
 \begin{equation}\label{eq: omega series}
 \omega^\alpha_{nj}=\frac{\omega_{3-\alpha}(D_{nj})}{\tau_n}\sum_{m=1}^\infty
-    C_m\bigl[(\delta_{nj}^+)^{2m}-(\delta_{nj}^-)^{2m}\bigr]
-\quad\text{where}\quad C_m=a_{2m}.
+    C_m\bigl[(\delta_{nj}^+)^{2m}-(\delta_{nj}^-)^{2m}\bigr].
 \end{equation}
 Furthermore,
 \[
-\sum_{m=1}^\infty C_{2m}\bigl[(\delta_{nj}^+)^{2m}-(\delta_{nj}^-)^{2m}\bigr]
-    =\sum_{m=1}^\infty C_{2m}
+\sum_{m=1}^\infty C_m\bigl[(\delta_{nj}^+)^{2m}-(\delta_{nj}^-)^{2m}\bigr]
+    =\sum_{m=1}^\infty C_m
     \bigl[(\delta_{nj}^+)^m+|\delta_{nj}^-|^m\bigr]
     \bigl[(\delta_{nj}^+)^m-|\delta_{nj}^-|^m\bigr],
 \]
 and we have
 \[
 (\delta_{nj}^+)^m-|\delta_{nj}^-|^m=(\delta_{nj}^+-|\delta_{nj}^-|)
-    \sum_{k=1}^m(\delta_{nj}^+)^{m-k}|\delta_{nj}^-|^{k-1}
-\quad\text{with}\quad
-\delta_{nj}^+-|\delta_{nj}^-|=\begin{cases}
-\tau_j&\text{if $\tau_n\ge\tau_j$,}\\
-\tau_n&\text{if $\tau_n<\tau_j$.}
+    \sum_{k=1}^m(\delta_{nj}^+)^{m-k}|\delta_{nj}^-|^{k-1}.
+\]
+Put
+\[
+b=\frac{\omega_{3-\alpha}(D_{n,n-1})}{\tau_n}\bigl(
+    \delta_{nj}^+-|\delta_{nj}^-|\bigr)
+    =\frac{D_{nj}^{1-\alpha}}{\Gamma(3-\alpha)}\times\begin{cases}
+\tau_j/\tau_n&\text{if $\tau_n\ge\tau_j$,}\\
+1&\text{if $\tau_n<\tau_j$,}
 \end{cases}
 \]
+so that
+\[
+\omega^\alpha_{nj}=b\sum_{m=1}^\infty C_m
+    \bigl[(\delta_{nj}^+)^m+|\delta_{nj}^-|^m\bigr]
+    \sum_{k=1}^m(\delta_{nj}^+)^{m-k}|\delta_{nj}^-|^{k-1}.
+\]
+
 When $j=n-1$, since $D_{n,n-1}=\tfrac12(\tau_n+\tau_{n-1})$ we see that
 $\delta_{n,n-1}^+=1$ and thus
 \[
@@ -206,6 +217,21 @@ we see that $0<C_1<1$.  For $m\ge2$,
 \]
 showing that $0<C_m/C_{m-1}<1$, because $4<2m+\alpha<2m$, and that
 $C_m/C_{m-1}\to1$.
+\end{proof}
+
+\begin{lemma}
+For $0<\delta<1$,
+\[
+\sum_{m=M+1}^\infty C_m\delta^{2m}\le \frac{C_{M+1}\delta^{2M+2}}{1-\delta^2}.
+\]
+\end{lemma}
+\begin{proof}
+Using the formula for the sum of a geometric progression,
+\[
+\sum_{m=M+1}^\infty C_m\delta^{2m}\le C_{M+1}\sum_{m=M+1}^\infty\delta^{2m}
+    =C_{M+1}\delta^{2M+2}\sum_{m=0}^\infty(\delta^2)^m
+    =\frac{C_{M+1}\delta^{2M+2}}{1-\delta^2}.
+\]
 \end{proof}
 
 
