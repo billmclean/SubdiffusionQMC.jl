@@ -20,9 +20,9 @@ end
 f(x) = π * exp(x) * ( π * sinpi(x) - cospi(x) )
 u(x) = sinpi(x)
 
-points, weights = legendre(4)
-ξ = ( points .+ 1 ) / 2
-w = weights / 2
+ξ, w = legendre(4)  # Gauss rule on (-1, 1)
+ξ = ( ξ .+ 1 ) / 2  # Transform to (0, 1)
+w = w / 2
 
 Nₕ = 10
 U, x = FEM_solution(Nₕ, κ, f, ξ, w)

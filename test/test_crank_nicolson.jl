@@ -1,7 +1,13 @@
 using SubdiffusionQMC
-import SubdiffusionQMC.FEM1D: load_vector, stiffness_matrix, mass_matrix
+import SubdiffusionQMC.FEM1D: load_vector!, stiffness_matrix, mass_matrix
 import GaussQuadrature: legendre
 using PyPlot
+
+
+function get_load_vector!(F::Vec64, t::Float64, 
+	                  f::Function, x::OVec64, ξ::Vec64, w::Vec64)
+    load_vector!(x->f(x, t), F, x, ξ, w)
+end
 
 function IBVP_solution(x::OVec64, t::OVec64, κ::Float64, f::Function,
 	               u₀::Function, ξ::Vec64, w::Vec64, ε=0.0)
@@ -11,14 +17,7 @@ function IBVP_solution(x::OVec64, t::OVec64, κ::Float64, f::Function,
     M = mass_matrix(x)
     U = OMat64(zeros(Nₕ+1, Nₜ+1), 0:Nₕ, 0:Nₜ)
     U[:,0] .= u₀.(x)
-    F = Mat64(undef, Nₕ-1, Nₜ)
-    for n = 1:Nₜ
-	F[:,n] .= load_vector(x, ξ, w) do x_
-	              midpoint = (t[n-1] + t[n]) / 2
-		      f(x_, midpoint)
-		  end
-    end
-    crank_nicolson!(U, M, A, F, t)
+    crank_nicolson!(U, M, A, t, get_load_vector!, f, x, ξ, w)
     return U
 end
 
@@ -42,7 +41,7 @@ k = 2
 λ = κ * (k * π)^2
 u_homogeneous(x, t) = exp(-λ * t) * sinpi(k * x)
 f_homogeneous(x, t) = 0.0
-u₀_homogeneous(x) = u(x, 0.0)
+u₀_homogeneous(x) = u_homogeneous(x, 0.0)
 
 U = IBVP_solution(x, t, κ, f_homogeneous, u₀_homogeneous, ξ, w)
 

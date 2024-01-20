@@ -35,10 +35,10 @@ we seek a continuous, piecewise-linear approximation
 \]
 where $I_n=(t_{n-1},t_n)$ denotes the $n$th subinterval.  To determine $\bs{U}$,
 we require that
-\[
+\begin{equation}\label{eq: gen CN}
 \int_{I_n}\bigl(\bs{M}\partial_t^\alpha\bs{U}+\bs{A}\bs{U}\bigr)\,\ud t
     =\int_{I_n}\bs{f}(t)\,\ud t\quad\text{for $1\le n\le N$,}
-\]
+\end{equation}
 with $\bs{U}^0=\bs{u}_0$.
 
 Observe that
@@ -92,6 +92,20 @@ we have
     =\omega^\alpha_{nn}\Delta\bs{U}^n
     +\sum_{j=1}^{n-1}\omega^\alpha_{nj}\Delta\bs{U}^j.
 \]
+
+The preceding calculations show that \eqref{eq: gen CN} holds iff
+\[
+\sum_{j=1}^n\omega_{nj}^\alpha\bs{M}\Delta\bs{U}^j
+    +\tau_n\bs{A}\bs{U}^{n-1/2}=\tau_n\bs{F}^{n-1/2},
+\]
+and by writing $\bs{U}^{n-1/2}=\bs{U}^{n-1}+\tfrac12\Delta\bs{U}^n$, we find
+that
+\begin{equation}\label{eq: gen CN linear system}
+(\omega_{nn}^\alpha\bs{M}+\tfrac12\tau_n\bs{A})\Delta\bs{U}^n
+    =\tau_n\bs{F}^{n-1/2}-\tau_n\bs{A}\bs{U}^{n-1}
+    -\sum_{j=1}^{n-1}\omega_{nj}^\alpha\bs{M}\Delta\bs{U}^j.
+\end{equation}
+
 Since $\omega_\beta=\omega_{\beta+1}'$,
 \[
 \int_{I_j}\omega_{1-\alpha}(t-s)\,\ud s
@@ -112,6 +126,42 @@ and
 \omega_{3-\alpha}(t_n-t_{j-1})-\omega_{3-\alpha}(t_{n-1}-t_{j-1})
 -\omega_{3-\alpha}(t_n-t_j)-\omega_{3-\alpha}(t_{n-1}-t_j)\bigr].
 \]
+If $\alpha\to1$ then $\omega^\alpha_{nn}\to1$ and
+$\omega^\alpha_{nj}\to0$ for $1\le j\le n-1$, and so the
+scheme~\eqref{eq: gen CN linear system} becomes
+\[
+(\bs{M}+\tfrac12\tau_n\bs{A})\Delta\bs{U}^n=\tau_n\bs{F}^{n-1/2}
+    -\tau_n\bs{A}\bs{U}^{n-1}.
+\]
+Equivalently, since $\Delta\bs{U}^n=\bs{U}^n-\bs{U}^{n-1}$,
+\[
+(\bs{M}+\tfrac12\tau_n\bs{A})\bs{U}^n=\tau_n\bs{F}^{n-1/2}
+    +(\bs{M}-\tfrac12\tau_n\bs{A})\bs{U}^{n-1},
+\]
+so we may view \eqref{eq: gen CN} as a generalisation of the classical
+Crank--Nicolson scheme.
+
+For $\alpha\in(0,1)$,
+\begin{align*}
+\sum_{j=1}^n\omega^\alpha_{nj}\Delta\bs{U}^j
+    &=\sum_{j=1}^n\omega^\alpha_{nj}(\bs{U}^j-\bs{U}^{j-1})
+    =\sum_{j=1}^n\omega^\alpha_{nj}\bs{U}^j
+    -\sum_{j=0}^{n-1}\omega^\alpha_{n,j+1}\bs{U}^j\\
+    &=\omega^\alpha_{nn}\bs{U}^n
+    -\sum_{j=1}^{n-1}(\omega^\alpha_{n,j+1}-\omega^\alpha_{nj})\bs{U}^j
+    -\omega^\alpha_{n1}\bs{U}^0,
+\end{align*}
+so the scheme may also be written as
+\[
+(\omega^\alpha_{nn}\bs{M}+\tfrac12\tau_n\bs{A})\bs{U}^n
+=\tau_n\bs{F}^{n-1/2}-\tfrac12\tau_n\bs{A}\bs{U}^{n-1}
+    +\bs{M}\biggl(\omega_{n1}^\alpha\bs{U}^0
+    +\sum_{j=1}^{n-1}(\omega^\alpha_{n,j+1}-\omega^\alpha_{n,j})\bs{U}^j\biggr).
+\]
+
+
+
+\section{Computing the weights}
 
 In the special case of a uniform mesh~$t_n=n\tau$,
 \[
@@ -142,7 +192,7 @@ to obtain
 \]
 
 If $\delta_{nj}^\pm$ is small, then direct evaluation will lead to loss of
-precision due to roundoff.  We therefore consider the Taylor expansion
+precision.  We therefore consider the Taylor expansion
 \[
 (1+\delta)^{2-\alpha}=1+\sum_{m=1}^\infty a_m\delta^m
 \quad\text{for $|\delta|<1$,}\quad
@@ -174,7 +224,7 @@ and we have
 \]
 Put
 \[
-b=\frac{\omega_{3-\alpha}(D_{n,n-1})}{\tau_n}\bigl(
+b=\frac{\omega_{3-\alpha}(D_{nj})}{\tau_n}\bigl(
     \delta_{nj}^+-|\delta_{nj}^-|\bigr)
     =\frac{D_{nj}^{1-\alpha}}{\Gamma(3-\alpha)}\times\begin{cases}
 \tau_j/\tau_n&\text{if $\tau_n\ge\tau_j$,}\\
@@ -182,11 +232,11 @@ b=\frac{\omega_{3-\alpha}(D_{n,n-1})}{\tau_n}\bigl(
 \end{cases}
 \]
 so that
-\[
+\begin{equation}\label{eq: omega sum}
 \omega^\alpha_{nj}=b\sum_{m=1}^\infty C_m
     \bigl[(\delta_{nj}^+)^m+|\delta_{nj}^-|^m\bigr]
     \sum_{k=1}^m(\delta_{nj}^+)^{m-k}|\delta_{nj}^-|^{k-1}.
-\]
+\end{equation}
 
 When $j=n-1$, since $D_{n,n-1}=\tfrac12(\tau_n+\tau_{n-1})$ we see that
 $\delta_{n,n-1}^+=1$ and thus
@@ -233,6 +283,18 @@ Using the formula for the sum of a geometric progression,
     =\frac{C_{M+1}\delta^{2M+2}}{1-\delta^2}.
 \]
 \end{proof}
+
+Retaining just the first term of the outer sum in~\eqref{eq: omega series}, and
+assuming that $\delta^-_{nj}$ is negligible compared to $\delta^+_{nj}$, we have
+\[
+\omega^\alpha_{nj}\approx bC_1(\delta^+_{nj})^2
+    =\frac{1}{\Gamma(3-\alpha)}\,\frac{\tau_j}{\tau_n}\,
+    \frac{(\tau_n+\tau_j)^2}{4}\,D_{nj}^{-1-\alpha}.
+\]
+In the special case of a uniform mesh,
+\[
+\omega^\alpha_{nj}\approx\frac{\tau}{\Gamma(3-\alpha)}\,D_{nj}^{-1-\alpha}
+\]
 
 
 

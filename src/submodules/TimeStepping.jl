@@ -5,33 +5,92 @@ import ..crank_nicolson!, ..graded_mesh, ..weights
 import LinearAlgebra: SymTridiagonal
 import OffsetArrays: OffsetVector
 import SpecialFunctions: gamma
+import LinearAlgebra: mul!, ldiv!, cholesky!, axpby!
+import LinearAlgebra.BLAS: scal!
 
 """
-    crank_nicolson!(U, M, A, F, t)
+    generalised_crank_nicolson!(U, M, A, α, t, get_load_vector!)
 
-Solves the system of ODEs `Mu̇ + Au = F(t)` using the Crank-Nicolson scheme
-to compute `U[j,n] ≈ u(x[j], t[n])`.  Assumes that the calling program
-has initialised `U[:,0]` to the initial data, with `F[j,n] ≈ f(x[j]`.
+Solves the spatially-discrete subdiffusion problem `Mu̇ + Au = F(t)`.
+The Crank-Nicolson scheme is used to compute `U[j,n] ≈ u(x[j], t[n])`,
+assuming that the calling program has initialised `U[:,0]` to the initial data, 
+and `U[0,n]` and `U[Nₕ,n]` to the boundary data at time `t[n]`.  
+The function call
+
+    get_load_vector!(F, t, parameters)
+
+computes the load vector `F` at time `t`.
 
 The array dimensions are as follows.
 
     U[j,n]	for 0 ≤ j ≤ Nₕ, 0 ≤ n ≤ Nₜ,
     A[i,j]	for 1 ≤ i ≤ Nₕ-1, 1 ≤ j ≤ Nₕ-1,
     M[i,j]	for 1 ≤ i ≤ Nₕ-1, 1 ≤ j ≤ Nₕ-1,
-    F[j,n]	for 1 ≤ j ≤ Nₕ-1, 1 ≤ n ≤ Nₜ,
-    t[n]	for 0 ≤ n ≤ N_t.
+    t[n]	for 0 ≤ n ≤ Nₜ.
 """
-function crank_nicolson!(U::OMat64, M::SymTridiagonal, A::SymTridiagonal, 
-	                 F::Mat64, t::OVec64)
+function generalized_crank_nicolson!(U::OMat64, M::SymTridiagonal, 
+	                             A::SymTridiagonal, α::Float64, t::OVec64, 
+				     get_load_vector!::Function, parameters...)
     Nₜ = lastindex(t)
+    Nₕ = size(U, 1) - 1
+    ω = weights(α, t)
+    F = Vec64(undef, Nₕ-1)
+    B = SymTridiagonal(zeros(Nₕ-1), zeros(Nₕ-2))
+    rhs = similar(F)
+    Σ = similar(F)
     for n = 1:Nₜ
         τ = t[n] - t[n-1]
-        B = M + (τ/2) * A
-	rhs = τ * F[:,n] - τ * (A * U[1:end-1,n-1])
-	W = B \ rhs
-        U[0,n] = 0.0
-	U[1:end-1,n] = U[1:end-1,n-1] + W
-        U[end,n] = 0.0
+	@. B = ω[n][n] * M + (τ/2) * A
+	midpoint = (t[n] + t[n-1]) / 2
+	get_load_vector!(F, midpoint, parameters...)
+	rhs .= τ * F - (τ/2) * (A * U[1:end-1,n-1])
+	Σ .= ω[n][1] * U[1:Nₕ-1,0]
+	for j = 1:n-1
+	    Σ .+= (ω[n][j+1] - ω[n][j]) * U[1:Nₕ-1,j]
+	end
+	rhs .= rhs + M * Σ
+	U[1:Nₕ-1,n] = B \ rhs
+    end
+end
+
+"""
+    crank_nicolson!(U, M, A, t, get_load_vector!)
+
+Solves the spatially-discrete diffusion problem `Mu̇ + Au = F(t)`.
+The Crank-Nicolson scheme is used to compute `U[j,n] ≈ u(x[j], t[n])`,
+assuming that the calling program has initialised `U[:,0]` to the initial data, 
+and `U[0,n]` and `U[Nₕ,n]` to the boundary data at time `t[n]`.  
+The function call
+
+    get_load_vector!(F, t, parameters)
+
+computes the load vector `F` at time `t`.
+
+The array dimensions are as follows.
+
+    U[j,n]	for 0 ≤ j ≤ Nₕ, 0 ≤ n ≤ Nₜ,
+    A[i,j]	for 1 ≤ i ≤ Nₕ-1, 1 ≤ j ≤ Nₕ-1,
+    M[i,j]	for 1 ≤ i ≤ Nₕ-1, 1 ≤ j ≤ Nₕ-1,
+    t[n]	for 0 ≤ n ≤ Nₜ.
+"""
+function crank_nicolson!(U::OMat64, M::SymTridiagonal, A::SymTridiagonal, 
+	                 t::OVec64, get_load_vector!::Function,
+			 parameters...)
+    Nₜ = lastindex(t)
+    Nₕ = lastindex(U, 1)
+    F = Vec64(undef, Nₕ-1)
+    B = SymTridiagonal(zeros(Nₕ-1), zeros(Nₕ-2))
+    rhs = similar(F)
+    for n = 1:Nₜ
+        τ = t[n] - t[n-1]
+        @. B = M + (τ/2) * A
+	midpoint = (t[n] + t[n-1]) / 2
+	get_load_vector!(F, midpoint, parameters...)
+	mul!(rhs, A, U[1:Nₕ-1,n-1])
+	rhs .= F - rhs
+	scal!(τ, rhs) # rhs = τ F - τ A Uⁿ⁻¹
+	ldiv!(B, rhs) # rhs = ΔUⁿ
+	U[1:Nₕ-1,n] .= U[1:Nₕ-1,n-1] .+ rhs
     end
 end
 
@@ -109,6 +168,9 @@ function weights!(ω::Vector{Vec64}, α::Float64, t::OVec64,
 	    τⱼ = t[j] - t[j-1]
 	    D = (t[n] + t[n-1])/2 - (t[j] + t[j-1])/2
             δ⁺[1] = (τₙ + τⱼ) / (2D)
+#	    if n == lastindex(ω)
+#		println("j = $j, δ⁺ = ", δ⁺[1])
+#	    end
             δ⁻[1] = (τₙ - τⱼ) / (2D)
             if δ⁺[1] > δ_threshold
 		ω[n][j] = ( ( D^(2-α) / ( Γ * τₙ ) ) 
@@ -147,14 +209,14 @@ end
 function Taylor_series!(δ⁺::Vec64, δ⁻::Vec64, C::Vec64, α::Float64, Γ::Float64, 
 	                τₙ::Float64, τⱼ::Float64, D::Float64, tol::Float64)
     b = D^(1-α) / Γ
-    if τₙ < τⱼ
-	b *= τ[j] / τ[n]
+    if τₙ > τⱼ
+	b *= τⱼ / τₙ
     end
     δ⁻[1] = abs(δ⁻[1])
     outer_Σ = C[1] * ( δ⁺[1] + δ⁻[1] )
     for m = 2:lastindex(C)
 	δ⁺[m] = δ⁺[1] * δ⁺[m-1]
-	if C[m] * δ⁺[m]^2 < tol * ( 1 - δ⁺[2] )
+	if C[m-1] * δ⁺[m]^2 < tol * ( 1 - δ⁺[2] )
 	    return b * outer_Σ
 	end
 	δ⁻[m] = δ⁻[1] * δ⁻[m-1]

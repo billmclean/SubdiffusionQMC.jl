@@ -7,6 +7,11 @@ import LinearAlgebra: SymTridiagonal, I
 function load_vector(f::Function, x::OVec64, ξ::Vec64, w::Vec64)
     Nₕ = lastindex(x)
     F = Vec64(undef, Nₕ-1)
+    load_vector!(f, F, x, ξ, w)
+    return F
+end
+
+function load_vector!(f::Function, F::Vec64, x::OVec64, ξ::Vec64, w::Vec64)
     for n in eachindex(F)
 	Σ₁, Σ₂ = 0.0, 0.0
 	for j in eachindex(ξ)
@@ -17,7 +22,6 @@ function load_vector(f::Function, x::OVec64, ξ::Vec64, w::Vec64)
 	end
 	F[n] = (x[n] - x[n-1]) * Σ₁ + (x[n+1] - x[n]) * Σ₂
     end
-    return F
 end
 
 function stiffness_matrix(κ::Function, x::OVec64, ξ::Vec64, w::Vec64)
