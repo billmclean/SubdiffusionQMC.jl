@@ -83,7 +83,7 @@ so, defining
 \]
 and
 \[
-\omega^\alpha_{nj}=\frac{1}{\tau_n}\int_{I_n}\int_{I_j}
+\omega^\alpha_{nj}=\frac{1}{\tau_j}\int_{I_n}\int_{I_j}
     \omega_{1-\alpha}(t-s)\,\ud s\,\ud t>0,
 \]
 we have
@@ -122,7 +122,7 @@ implying that
 \]
 and
 \[
-\omega^\alpha_{nj}=\tau_n^{-1}\bigl[
+\omega^\alpha_{nj}=\tau_j^{-1}\bigl[
 \omega_{3-\alpha}(t_n-t_{j-1})-\omega_{3-\alpha}(t_{n-1}-t_{j-1})
 -\omega_{3-\alpha}(t_n-t_j)-\omega_{3-\alpha}(t_{n-1}-t_j)\bigr].
 \]
@@ -186,7 +186,7 @@ t_{n-1}-t_j&=D_{nj}(1-\delta_{nj}^+),
 \end{align*}
 to obtain
 \[
-\omega^\alpha_{nj}=\frac{\omega_{3-\alpha}(D_{nj})}{\tau_n}\bigl[
+\omega^\alpha_{nj}=\frac{\omega_{3-\alpha}(D_{nj})}{\tau_j}\bigl[
  (1+\delta_{nj}^+)^{2-\alpha}-(1-\delta_{nj}^-)^{2-\alpha}
 -(1+\delta_{nj}^-)^{2-\alpha}+(1-\delta_{nj}^+)^{2-\alpha}\bigr].
 \]
@@ -207,7 +207,7 @@ and note that
 \]
 so
 \begin{equation}\label{eq: omega series}
-\omega^\alpha_{nj}=\frac{\omega_{3-\alpha}(D_{nj})}{\tau_n}\sum_{m=1}^\infty
+\omega^\alpha_{nj}=\frac{\omega_{3-\alpha}(D_{nj})}{\tau_j}\sum_{m=1}^\infty
     C_m\bigl[(\delta_{nj}^+)^{2m}-(\delta_{nj}^-)^{2m}\bigr].
 \end{equation}
 Furthermore,
@@ -224,11 +224,11 @@ and we have
 \]
 Put
 \[
-b=\frac{\omega_{3-\alpha}(D_{nj})}{\tau_n}\bigl(
+b=\frac{\omega_{3-\alpha}(D_{nj})}{\tau_j}\bigl(
     \delta_{nj}^+-|\delta_{nj}^-|\bigr)
     =\frac{D_{nj}^{1-\alpha}}{\Gamma(3-\alpha)}\times\begin{cases}
-\tau_j/\tau_n&\text{if $\tau_n\ge\tau_j$,}\\
-1&\text{if $\tau_n<\tau_j$,}
+1&\text{if $\tau_n\ge\tau_j$,}\\
+\tau_n/\tau_j&\text{if $\tau_n<\tau_j$,}
 \end{cases}
 \]
 so that
@@ -241,7 +241,8 @@ so that
 When $j=n-1$, since $D_{n,n-1}=\tfrac12(\tau_n+\tau_{n-1})$ we see that
 $\delta_{n,n-1}^+=1$ and thus
 \[
-\omega^\alpha_{n,n-1}=\frac{\omega_{3-\alpha}(D_{n,n-1})}{\tau_n}\bigl[
+\omega^\alpha_{n,n-1}=\frac{\omega_{3-\alpha}(D_{n,n-1})}{\tau_{n-1}}
+\bigl[
     2^{2-\alpha}-(1-\delta_{n,n-1}^-)^{2-\alpha}
     -(1+\delta_{n,n-1}^-)^{2-\alpha}\bigr]
 \]
@@ -287,13 +288,16 @@ Using the formula for the sum of a geometric progression,
 Retaining just the first term of the outer sum in~\eqref{eq: omega series}, and
 assuming that $\delta^-_{nj}$ is negligible compared to $\delta^+_{nj}$, we have
 \[
-\omega^\alpha_{nj}\approx bC_1(\delta^+_{nj})^2
-    =\frac{1}{\Gamma(3-\alpha)}\,\frac{\tau_j}{\tau_n}\,
-    \frac{(\tau_n+\tau_j)^2}{4}\,D_{nj}^{-1-\alpha}.
+\omega^\alpha_{nj}\approx
+\frac{\omega_{3-\alpha}(D_{nj})}{\tau_j}C_1(\delta^+_{nj})^2
+    =\frac{C_1}{\Gamma(3-\alpha)}\,
+    \frac{(\tau_n+\tau_j)^2}{4\tau_j}\,D_{nj}^{-1-\alpha}
+    =\frac{1}{\Gamma(1-\alpha)}\,
+    \frac{(\tau_n+\tau_j)^2}{4\tau_j}\,D_{nj}^{-1-\alpha}.
 \]
 In the special case of a uniform mesh,
 \[
-\omega^\alpha_{nj}\approx\frac{\tau}{\Gamma(3-\alpha)}\,D_{nj}^{-1-\alpha}
+\omega^\alpha_{nj}\approx\frac{\tau}{\Gamma(1-\alpha)}\,D_{nj}^{-1-\alpha}.
 \]
 
 

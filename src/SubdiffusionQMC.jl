@@ -5,12 +5,13 @@ using OffsetArrays
 
 export Vec64, OVec64, Mat64, OMat64
 export DiffusivityStore1D, interpolate_κ!
-export crank_nicolson!, graded_mesh, weights
+export generalised_crank_nicolson!, crank_nicolson!, graded_mesh, weights
 
 const Vec64 = Vector{Float64} 
 const OVec64 = OffsetVector{Float64}
 const Mat64 = Matrix{Float64}
 const OMat64 = OffsetMatrix{Float64}
+const AMat64 = AbstractMatrix{Float64}
 
 struct DiffusivityStore1D
     α::Float64
@@ -25,9 +26,10 @@ include("submodules/RandomDiffusivity.jl")
 
 include("submodules/FEM1D.jl")
 
+function generalised_crank_nicolson! end
 function crank_nicolson! end
 function graded_mesh end
 function weights end
-include("submodules/TimeStepping.jl")
+include("submodules/Timestepping.jl")
 
 end # module SubdiffusionQMC

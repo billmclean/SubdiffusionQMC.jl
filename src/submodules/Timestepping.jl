@@ -1,7 +1,8 @@
-module TimeStepping
+module Timestepping
 
-import ..Vec64, ..Mat64, ..OVec64, ..OMat64
-import ..crank_nicolson!, ..graded_mesh, ..weights
+import ..Vec64, ..Mat64, ..OVec64, ..OMat64, ..AMat64
+import ..generalised_crank_nicolson!, ..crank_nicolson!, 
+       ..graded_mesh, ..weights
 import LinearAlgebra: SymTridiagonal
 import OffsetArrays: OffsetVector
 import SpecialFunctions: gamma
@@ -28,7 +29,7 @@ The array dimensions are as follows.
     M[i,j]	for 1 ≤ i ≤ Nₕ-1, 1 ≤ j ≤ Nₕ-1,
     t[n]	for 0 ≤ n ≤ Nₜ.
 """
-function generalized_crank_nicolson!(U::OMat64, M::SymTridiagonal, 
+function generalised_crank_nicolson!(U::OMat64, M::SymTridiagonal, 
 	                             A::SymTridiagonal, α::Float64, t::OVec64, 
 				     get_load_vector!::Function, parameters...)
     Nₜ = lastindex(t)
@@ -43,10 +44,10 @@ function generalized_crank_nicolson!(U::OMat64, M::SymTridiagonal,
 	@. B = ω[n][n] * M + (τ/2) * A
 	midpoint = (t[n] + t[n-1]) / 2
 	get_load_vector!(F, midpoint, parameters...)
-	rhs .= τ * F - (τ/2) * (A * U[1:end-1,n-1])
+	rhs .= τ .* F - (τ/2) .* (A * U[1:end-1,n-1])
 	Σ .= ω[n][1] * U[1:Nₕ-1,0]
 	for j = 1:n-1
-	    Σ .+= (ω[n][j+1] - ω[n][j]) * U[1:Nₕ-1,j]
+	    Σ .+= (ω[n][j+1] - ω[n][j]) .* U[1:Nₕ-1,j]
 	end
 	rhs .= rhs + M * Σ
 	U[1:Nₕ-1,n] = B \ rhs
@@ -73,7 +74,8 @@ The array dimensions are as follows.
     M[i,j]	for 1 ≤ i ≤ Nₕ-1, 1 ≤ j ≤ Nₕ-1,
     t[n]	for 0 ≤ n ≤ Nₜ.
 """
-function crank_nicolson!(U::OMat64, M::SymTridiagonal, A::SymTridiagonal, 
+#function crank_nicolson!(U::OMat64, M::SymTridiagonal, A::SymTridiagonal, 
+function crank_nicolson!(U::OMat64, M::AMat64, A::AMat64, 
 	                 t::OVec64, get_load_vector!::Function,
 			 parameters...)
     Nₜ = lastindex(t)
@@ -127,17 +129,16 @@ function weights!(ω::Vector{Vector{T}}, α::T,
 	    D = (t[n] + t[n-1])/2 - (t[j] + t[j-1])/2
 	    δ⁺ = (τₙ + τⱼ) / (2D)
 	    δ⁻ = (τₙ - τⱼ) / (2D)
-	    ω[n][j] = D^(2-α) * (  (1 + δ⁺)^(2-α) 
-				 - (1 - δ⁻)^(2-α)
-				 - (1 + δ⁻)^(2-α)
-				 + (1 - δ⁺)^(2-α) ) / ( Γ * τₙ ) 
+            ω[n][j] = ( ( D^(2-α) / ( Γ * τⱼ ) ) 
+                      * ( (1 + δ⁺[1])^(2-α) - (1 - δ⁻[1])^(2-α)
+                        - (1 + δ⁻[1])^(2-α) + (1 - δ⁺[1])^(2-α) ) )
 	end
 	j = n-1
         τⱼ = t[j] - t[j-1]
 	D = (t[n] + t[n-1])/2 - (t[j] + t[j-1])/2
 	δ⁻ = (τₙ - τⱼ) / (2D)
 	ω[n][j] = D^(2-α) * ( 2^(2-α) - (1 - δ⁻)^(2-α) 
-			              - (1 + δ⁻)^(2-α)) / ( Γ * τₙ ) 
+			              - (1 + δ⁻)^(2-α)) / ( Γ * τⱼ ) 
 	ω[n][n] = τₙ^(1-α) / Γ
     end
 end
@@ -173,7 +174,7 @@ function weights!(ω::Vector{Vec64}, α::Float64, t::OVec64,
 #	    end
             δ⁻[1] = (τₙ - τⱼ) / (2D)
             if δ⁺[1] > δ_threshold
-		ω[n][j] = ( ( D^(2-α) / ( Γ * τₙ ) ) 
+		ω[n][j] = ( ( D^(2-α) / ( Γ * τⱼ ) ) 
 			  * ( (1 + δ⁺[1])^(2-α) - (1 - δ⁻[1])^(2-α)
 		            - (1 + δ⁻[1])^(2-α) + (1 - δ⁺[1])^(2-α) ) )
 	    else
@@ -185,7 +186,7 @@ function weights!(ω::Vector{Vec64}, α::Float64, t::OVec64,
 	D = (t[n] + t[n-1])/2 - (t[j] + t[j-1])/2
 	δ⁻[1] = (τₙ - τⱼ) / (2D)
 	ω[n][j] = D^(2-α) * ( 2^(2-α) - (1 - δ⁻[1])^(2-α) 
-			              - (1 + δ⁻[1])^(2-α)) / ( Γ * τₙ ) 
+			              - (1 + δ⁻[1])^(2-α)) / ( Γ * τⱼ ) 
         ω[n][n] = τₙ^(1-α) / Γ
     end
 end
@@ -209,8 +210,8 @@ end
 function Taylor_series!(δ⁺::Vec64, δ⁻::Vec64, C::Vec64, α::Float64, Γ::Float64, 
 	                τₙ::Float64, τⱼ::Float64, D::Float64, tol::Float64)
     b = D^(1-α) / Γ
-    if τₙ > τⱼ
-	b *= τⱼ / τₙ
+    if τₙ < τⱼ
+	b *= τₙ / τⱼ
     end
     δ⁻[1] = abs(δ⁻[1])
     outer_Σ = C[1] * ( δ⁺[1] + δ⁻[1] )
