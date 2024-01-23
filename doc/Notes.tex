@@ -154,12 +154,12 @@ For $\alpha\in(0,1)$,
     -\omega^\alpha_{n1}\bs{U}^0,
 \end{align*}
 so the scheme may also be written as
-\[
+\begin{equation}\label{eq: full scheme}
 (\omega^\alpha_{nn}\bs{M}+\tfrac12\tau_n\bs{A})\bs{U}^n
 =\tau_n\bs{F}^{n-1/2}-\tfrac12\tau_n\bs{A}\bs{U}^{n-1}
     +\bs{M}\biggl(\omega_{n1}^\alpha\bs{U}^0
     +\sum_{j=1}^{n-1}(\omega^\alpha_{n,j+1}-\omega^\alpha_{n,j})\bs{U}^j\biggr).
-\]
+\end{equation}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -302,6 +302,7 @@ In the special case of a uniform mesh,
 \omega^\alpha_{nj}\approx\frac{\tau}{\Gamma(1-\alpha)}\,D_{nj}^{-1-\alpha}.
 \]
 
+For $1\le n\le r$
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Exponential sum approximation}
 
@@ -352,23 +353,23 @@ and if $0<r<\pi/2$ then~\cite[Theorem~4]{McLean2018}
 
 In practice, we have to work with a finite sum
 \[
-t^{-\beta}\approx
-Q_{M,N}(t;\Delta x)=\frac{1}{\Gamma(\beta)}\sum_{m=-M}^Nw_m\ue^{-a_mt}.
+t^{-\beta}\approx Q_{M_+,M_-}(t;\Delta x)
+    =\frac{1}{\Gamma(\beta)}\sum_{m=-M_-}^{M_+}w_m\ue^{-a_mt}.
 \]
 Suppose that we want to approximate $t^{-\beta}$ by an exponential sum for
 $\delta\le t\le T$.  Since
 \[
-t^{-\beta}=T^{-\beta}(t/T)^{-\beta}\approx T^{-\beta}Q_{M,N}(t/T; \Delta x),
+t^{-\beta}=T^{-\beta}(t/T)^{-\beta}\approx T^{-\beta}Q_{M_+,M_-}(t/T; \Delta x),
 \]
-we choose $M$~and $N$ so that
+we choose $M_+$~and $M_-$ so that
 \[
-T^{-\beta}w_m\ue^{-a_m\delta/T}<\mathrm{tol}\quad\text{if $m<-M$ or $m>N$,}
+T^{-\beta}w_m\ue^{-a_m\delta/T}<\mathrm{tol}\quad\text{if $m<-M_-$ or $m>M_+$,}
 \]
 and then plot the relative error $\rho(t/T; \Delta x)$ for~$\delta\le t\le T$
 to determine the accuracy of
 \[
-t^{-\beta}\approx \frac{T^{-\beta}}{\Gamma(\beta)}\sum_{m=-M}^N
-    w_m\ue^{-a_mt/T}=\frac{1}{\Gamma(\beta)}\sum_{m=-M}^N W_m\ue^{-A_mt}
+t^{-\beta}\approx \frac{T^{-\beta}}{\Gamma(\beta)}\sum_{m=-M_-}^{M_+}
+    w_m\ue^{-a_mt/T}=\frac{1}{\Gamma(\beta)}\sum_{m=-M_-}^{M_+}W_m\ue^{-A_mt}
 \quad\text{where $W_m=\frac{w_m}{T^\beta}$ and $A_m=\frac{a_m}{T}$.}
 \]
 
@@ -379,7 +380,7 @@ Assume now that $\beta=1-\alpha$ for $0<\alpha<1$.  The identity
 means that
 \begin{equation}\label{eq: omega exponential sum}
 \omega_{1-\alpha}(t)=\frac{t^{-\alpha}}{\Gamma(1-\alpha)}
-    \approx\frac{\sin\pi\alpha}{\pi}\sum_{m=-M}^NW_m\ue^{-A_mt}.
+    \approx\frac{\sin\pi\alpha}{\pi}\sum_{m=-M_-}^{M_+}W_m\ue^{-A_mt}.
 \end{equation}
 We want to use this approximation to speed up the evaluation
 of~$\int_{I_n}\partial_t^\alpha U\,dt$.  To that end, write
@@ -395,8 +396,7 @@ J^n_2(t)=\int_{I_n}\int_0^{t_{n-r}}\omega_{1-\alpha}(t-s)\bs{U}'(s)\,\ud s.
 \]
 By our earlier calculations
 \[
-J_1^n(t)=\omega^\alpha_{nn}\Delta\bs{U}^n+\sum_{k=n-r+1}^{n-1}
-    \omega^\alpha_{nj}\Delta\bs{U}^j
+J_1^n(t)=\sum_{k=n-r+1}^n \omega^\alpha_{nj}\Delta\bs{U}^j
 \quad\text{and}\quad
 J_2^n(t)=\sum_{j=1}^{n-r}\omega^\alpha_{nj}\Delta\bs{U}^j.
 \]
@@ -404,13 +404,14 @@ J_2^n(t)=\sum_{j=1}^{n-r}\omega^\alpha_{nj}\Delta\bs{U}^j.
 In the double integral defining $J^n_2(t)$, we have $t\ge t_{n-1}$~and
 $s\le t_{n-r}$, so $t_{n-1}-t_{n-r}\le t-s\le T$.  Thus, if we put
 \[
-\delta=\min_{r\le n\le N}(t_{n-1}-t_{n-r})
+\delta=\min_{r\le n\le N}\frac{t_{n-1}-t_{n-r}}{T}
 \]
 then, by replacing $t$ with~$t-s$ in~\eqref{eq: omega exponential sum},
 \begin{align*}
 J_2^n&\approx \hat J_2^n\equiv\frac{\sin\pi\alpha}{\pi}\int_{I_n}
-    \int_0^{t_{n-r}}\sum_{m=-M}^N W_m\ue^{-A_m(t-s)}\bs{U}'(s)\,\ud s\,\ud t\\
-    &=\frac{\sin\pi\alpha}{\pi}\sum_{m=-M}^N
+    \int_0^{t_{n-r}}\sum_{m=-M_-}^{M_+}
+        W_m\ue^{-A_m(t-s)}\bs{U}'(s)\,\ud s\,\ud t\\
+    &=\frac{\sin\pi\alpha}{\pi}\sum_{m=-M_-}^{M_+}
     \int_{I_n}\ue^{-A_m(t-t_{n-1})}\,\ud t
     \int_0^{t_{n-r}}\ue^{-A_m(t_{n-1}-s)}\bs{U}'(s)\,\ud s.
 \end{align*}
@@ -422,7 +423,8 @@ c_{n,m}=\int_{I_n}\ue^{-A_n(t-t_{n-1}}\,\ud t=\frac{1-\ue^{-A_m\tau_n}}{A_m},
 \]
 so
 \[
-\hat J^n_2=\frac{\sin\pi\alpha}{\pi}\sum_{m=-M}^N S^n_m,
+\hat J^n_2=\frac{\sin\pi\alpha}{\pi}\sum_{m=-M_-}^{M_+} S^n_m
+    \quad\text{for $r+1\le n\le N$,}
 \]
 and note that since $A_m\to0$ as~$m\to-\infty$, to minimise roundoff we should
 use the function~$\mathtt{expm1}(x)=\ue^x-1$ to compute
@@ -437,9 +439,9 @@ Since
     \frac{\Delta\bs{U}^{n+1-r}}{\tau_{n+1-r}}\,\ud s\\
     +\ue^{-A_m\tau_n}\int_0^{t_{n-r}}\ue^{-A_m(t_{n-1}-s)}\bs{U}'(s)\,\ud s,
 \end{multline*}
-we may compute the $\hat S^n_m$ recursively, as follows:
+we may compute the $S^n_m$ recursively, as follows:
 \[
-\hat S^{n+1}_m=\mu_{m,n}\Delta\bs{U}^{n+1-r}+\nu_{n,m}\hat S^n_m
+S^{n+1}_m=\mu_{m,n}\Delta\bs{U}^{n+1-r}+\nu_{n,m}S^n_m
 \quad\text{for $n\ge r$, with $S^r_m=0$,}
 \]
 where the coefficients are
@@ -449,10 +451,10 @@ where the coefficients are
 \quad\text{and}\quad
 \nu_{n,m}=\frac{c_{n+1,m}}{c_{n,m}}\,e^{-A_m\tau_n}.
 \]
-To minimse roundoff, we compute
+To minimise roundoff, we compute
 \[
-\mu_{n,m}=\frac{c_{n+1,m}}{A_m}\ue^{-A_m(t_n-t_{n-r})}
-    \mathtt{expm1}(A_m\tau_{n+1-r}).
+\mu_{n,m}=c_{n+1,m}\ue^{-A_m(t_n-t_{n-r})}\,
+    \frac{\mathtt{expm1}(A_m\tau_{n+1-r})}{A_m}.
 \]
 Notice that since $e^x-1=x+O(x^2)$ as $x\to0$, if $A_m$ is small then
 \[
@@ -460,6 +462,37 @@ c_{n,m}\approx\tau_n,\qquad
 \mu_{n,m}\approx\tau_{n+1}\tau_{n+1-r},\qquad
 \nu_{n,m}\approx\frac{\tau_{n+1}}{\tau_n}.
 \]
+
+For $1\le n\le r$, we compute~$\bs{U}^n$ via~\eqref{eq: full scheme}, but for
+$r+1\le n\le N$ we use the approximation
+\[
+\int_{I_n}\mathcal{I}^{1-\alpha}\bs{U}'\,\ud t=J_1^n+J_2^n
+    \approx J_1^n+\hat J_2^n,
+\]
+so that the scheme~\eqref{eq: gen CN} becomes
+\[
+\bs{M}\biggl(\sum_{k=n-r+1}^n \omega^\alpha_{nj}\Delta\bs{U}^j
+    +\frac{\sin\pi\alpha}{\pi}\sum_{m=-M_-}^{M_+} S^n_m\biggr)
+    +\tau_n\bs{A}\bs{U}^{n-1/2}=\tau_n\bs{F}^{n-1/2}.
+\]
+Rearranging this equation, and noting that
+\begin{align*}
+\sum_{k=n-r+1}^n\omega^\alpha_{nj}\Delta\bs{U}^j
+    &=\sum_{k=n-r+1}^n\omega^\alpha_{nj}\bs{U}^j
+    -\sum_{k=n-r}^{n-1}\omega^\alpha_{n,j+1}\bs{U}^j\\
+    &=\omega^\alpha_{nn}\bs{U}^n-\biggl(\omega^\alpha_{n,n-r+1}\bs{U}^{n-r}
+    +\sum_{k=n-r+1}^{n-1}(\omega^\alpha_{n,j+1}-\omega^\alpha_{nj})\bs{U}^j
+    \biggr),
+\end{align*}
+we obtain a linear system for~$\bs{U}^n$,
+\begin{multline*}
+(\bs{M}\bs{U}^n+\tfrac12\tau_n\bs{A})\bs{U}^n=\tau_n\bs{F}^{n-1/2}
+    -\tau_n\bs{A}\bs{U}^{n-1/2}\\
+    +\bs{M}\biggl(\omega^\alpha_{n,n-r+1}\bs{U}^{n-r}
+    +\sum_{k=n-r+1}^{n-1}(\omega^\alpha_{n,j+1}-\omega^\alpha_{nj})\bs{U}^j
+    -\frac{\sin\pi\alpha}{\pi}\sum_{m=-M_-}^{M_+} S^n_m\biggr).
+\end{multline*}
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

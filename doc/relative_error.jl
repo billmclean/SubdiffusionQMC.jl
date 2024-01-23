@@ -1,8 +1,6 @@
-import OffsetArrays: OffsetVector
+using SubdiffusionQMC
 import SpecialFunctions: gamma
 using PyPlot
-
-OVec64 = OffsetVector{Float64}
 
 function weights_and_exponents(M::Integer, N::Integer, Δx::Float64, β::Float64)
     a = OVec64(undef, -M:N)
