@@ -1,5 +1,5 @@
 using SubdiffusionQMC
-import SubdiffusionQMC.TimeStepping: Taylor_coefficients!
+import SubdiffusionQMC.Timestepping: Taylor_coefficients!
 using PyPlot
 
 α = 0.5
@@ -11,7 +11,7 @@ Taylor_coefficients!(C, α)
 Taylor_sum = similar(δ)
 error_bound = similar(δ)
 power_of_δ = similar(C)
-for j in eachindex(S)
+for j in eachindex(δ)
     Σ = 0.0
     power_of_δ[1] = δ[j]^2
     for m in 1:M

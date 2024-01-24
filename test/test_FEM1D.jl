@@ -16,7 +16,7 @@ function FEM_solution(Nₕ::Integer, κ::Function, f::Function,
     return U, x
 end
 
-κ(x) = exp(x)
+FEM1D_κ(x) = exp(x)
 f(x) = π * exp(x) * ( π * sinpi(x) - cospi(x) )
 u(x) = sinpi(x)
 
@@ -25,7 +25,7 @@ u(x) = sinpi(x)
 w = w / 2
 
 Nₕ = 10
-U, x = FEM_solution(Nₕ, κ, f, ξ, w)
+U, x = FEM_solution(Nₕ, FEM1D_κ, f, ξ, w)
 
 figure(1)
 xx = range(0, 1, 201)
