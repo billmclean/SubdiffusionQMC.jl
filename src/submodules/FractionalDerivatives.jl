@@ -3,6 +3,7 @@ module FractionalDerivatives
 import OffsetArrays: OffsetVector
 import ..Vec64, ..OVec64, ..OMat64, ..ExponentialSumStore
 import ..graded_mesh, ..weights, ..weights!, ..exponential_sum
+import SpecialFunctions: gamma
 
 function graded_mesh(Nₜ::Integer, γ::Float64, final_time::Float64)
     t = OVec64(undef, 0:Nₜ)
@@ -77,7 +78,7 @@ function exponential_sum_parameters(m::Integer, Δx::Float64, α::Float64)
 end
 
 function exponential_sum(t::Float64, estore::ExponentialSumStore)
-    w, a, tol, α = estore.w, estore.a, estore.tol, estore.α
+    (; w, a, tol, α) = estore
     Σ₋ = 0.0
     M₋ = -1
     for m = -1:-1:firstindex(w)
