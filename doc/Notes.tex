@@ -126,7 +126,7 @@ and
 \[
 \omega^\alpha_{nj}=\tau_j^{-1}\bigl[
 \omega_{3-\alpha}(t_n-t_{j-1})-\omega_{3-\alpha}(t_{n-1}-t_{j-1})
--\omega_{3-\alpha}(t_n-t_j)-\omega_{3-\alpha}(t_{n-1}-t_j)\bigr].
+-\omega_{3-\alpha}(t_n-t_j)+\omega_{3-\alpha}(t_{n-1}-t_j)\bigr].
 \]
 If $\alpha\to1$ then $\omega^\alpha_{nn}\to1$ and
 $\omega^\alpha_{nj}\to0$ for $1\le j\le n-1$, and so the
@@ -140,8 +140,8 @@ Equivalently, since $\Delta\bs{U}^n=\bs{U}^n-\bs{U}^{n-1}$,
 (\bs{M}+\tfrac12\tau_n\bs{A})\bs{U}^n=\tau_n\bs{F}^{n-1/2}
     +(\bs{M}-\tfrac12\tau_n\bs{A})\bs{U}^{n-1},
 \]
-so we may view \eqref{eq: gen CN} as a generalisation of the classical
-Crank--Nicolson scheme.
+so we may view \eqref{eq: gen CN} as a generalisation of the
+classical Crank--Nicolson scheme.
 
 For $\alpha\in(0,1)$,
 \begin{align*}
@@ -253,22 +253,22 @@ $\delta_{n,n-1}^+=1$ and thus
 Assume that $0<\alpha<1$. Then, the coefficients in the
 representation~\eqref{eq: omega series} satisfy
 \[
-1>C_1>C_2>C_3>\cdots>0\quad\text{with}\quad
+2>C_1>C_2>C_3>\cdots>0\quad\text{with}\quad
 \lim_{m\to\infty}\frac{C_m}{C_{m-1}}=1.
 \]
 \end{lemma}
 \begin{proof}
 Since
 \[
-C_1=a_2=\frac{2-\alpha}{1}\,\frac{1-\alpha}{2}=(1-\tfrac12\alpha)(1-\alpha)
+C_1=2a_2=2\,\frac{2-\alpha}{1}\,\frac{1-\alpha}{2}=(2-\alpha)(1-\alpha)
 \]
-we see that $0<C_1<1$.  For $m\ge2$,
+we see that $0<C_1<2$.  For $m\ge2$,
 \[
 \frac{C_m}{C_{m-1}}=\frac{a_{2m}}{a_{2m-2}}
     =\frac{4-\alpha-2m}{2m-1}\,\frac{3-\alpha-2m}{2m}
     =\frac{2m+\alpha-4}{2m-1}\,\frac{2m+\alpha-3}{2m},
 \]
-showing that $0<C_m/C_{m-1}<1$, because $4<2m+\alpha<2m$, and that
+showing that $0<C_m/C_{m-1}<1$, because $4<2m+\alpha<2m+1$, and that
 $C_m/C_{m-1}\to1$.
 \end{proof}
 
@@ -396,7 +396,7 @@ J^n_2(t)=\int_{I_n}\int_0^{t_{n-r}}\omega_{1-\alpha}(t-s)\bs{U}'(s)\,\ud s.
 \]
 By our earlier calculations
 \[
-J_1^n(t)=\sum_{k=n-r+1}^n \omega^\alpha_{nj}\Delta\bs{U}^j
+J_1^n(t)=\sum_{j=n-r+1}^n \omega^\alpha_{nj}\Delta\bs{U}^j
 \quad\text{and}\quad
 J_2^n(t)=\sum_{j=1}^{n-r}\omega^\alpha_{nj}\Delta\bs{U}^j.
 \]
@@ -421,7 +421,7 @@ Put
 \]
 where
 \[
-c_{n,m}=W_m\int_{I_n}\ue^{-A_n(t-t_{n-1})}\,\ud t
+c_{n,m}=W_m\int_{I_n}\ue^{-A_m(t-t_{n-1})}\,\ud t
     =W_m\,\frac{1-\ue^{-A_m\tau_n}}{A_m},
 \]
 so
@@ -492,17 +492,17 @@ $r+1\le n\le N$ we use the approximation
 \]
 so that the scheme~\eqref{eq: gen CN} becomes
 \[
-\bs{M}\biggl(\sum_{k=n-r+1}^n \omega^\alpha_{nj}\Delta\bs{U}^j
+\bs{M}\biggl(\sum_{j=n-r+1}^n \omega^\alpha_{nj}\Delta\bs{U}^j
     +\frac{\sin\pi\alpha}{\pi}\sum_{m=-M_-}^{M_+} \bs{S}^n_m\biggr)
     +\tau_n\bs{A}\bs{U}^{n-1/2}=\tau_n\bs{F}^{n-1/2}.
 \]
 Rearranging this equation, and noting that
 \begin{align*}
-\sum_{k=n-r+1}^n\omega^\alpha_{nj}\Delta\bs{U}^j
-    &=\sum_{k=n-r+1}^n\omega^\alpha_{nj}\bs{U}^j
-    -\sum_{k=n-r}^{n-1}\omega^\alpha_{n,j+1}\bs{U}^j\\
+\sum_{j=n-r+1}^n\omega^\alpha_{nj}\Delta\bs{U}^j
+    &=\sum_{j=n-r+1}^n\omega^\alpha_{nj}\bs{U}^j
+    -\sum_{j=n-r}^{n-1}\omega^\alpha_{n,j+1}\bs{U}^j\\
     &=\omega^\alpha_{nn}\bs{U}^n-\biggl(\omega^\alpha_{n,n-r+1}\bs{U}^{n-r}
-    +\sum_{k=n-r+1}^{n-1}(\omega^\alpha_{n,j+1}-\omega^\alpha_{nj})\bs{U}^j
+    +\sum_{j=n-r+1}^{n-1}(\omega^\alpha_{n,j+1}-\omega^\alpha_{nj})\bs{U}^j
     \biggr),
 \end{align*}
 we obtain a linear system for~$\bs{U}^n$,
@@ -510,7 +510,7 @@ we obtain a linear system for~$\bs{U}^n$,
 (\omega^\alpha_{nn}\bs{M}\bs{U}^n+\tfrac12\tau_n\bs{A})\bs{U}^n
     =\tau_n\bs{F}^{n-1/2}-\tfrac12\tau_n\bs{A}\bs{U}^{n-1}\\
     +\bs{M}\biggl(\omega^\alpha_{n,n-r+1}\bs{U}^{n-r}
-    +\sum_{k=n-r+1}^{n-1}(\omega^\alpha_{n,j+1}-\omega^\alpha_{nj})\bs{U}^j
+    +\sum_{j=n-r+1}^{n-1}(\omega^\alpha_{n,j+1}-\omega^\alpha_{nj})\bs{U}^j
     -\frac{\sin\pi\alpha}{\pi}\sum_{m=-M_-}^{M_+}\bs{S}^n_m\biggr).
 \end{multline*}
 

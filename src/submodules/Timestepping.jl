@@ -125,7 +125,6 @@ The array dimensions are as follows.
     M[i,j]	for 1 ≤ i ≤ Nₕ-1, 1 ≤ j ≤ Nₕ-1,
     t[n]	for 0 ≤ n ≤ Nₜ.
 """
-#function crank_nicolson!(U::OMat64, M::SymTridiagonal, A::SymTridiagonal, 
 function crank_nicolson!(U::OMat64, M::AMat64, A::AMat64, 
 	                 t::OVec64, get_load_vector!::Function,
 			 parameters...)
