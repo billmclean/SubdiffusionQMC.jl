@@ -44,7 +44,7 @@ for row = 2:nrows
     global Nₕ
     local U, x
     Nₕ *= 2
-    U, x = FEM_solution(Nₕ, κ, f, ξ, w, 0.2)
+    U, x = FEM_solution(Nₕ, FEM1D_κ, f, ξ, w, 0.2)
     max_error[row] = maximum(abs, U - u.(x))
     rate = log2(max_error[row-1] / max_error[row])
     @printf("%5d  %10.3e  %8.3f\n", Nₕ, max_error[row], rate)

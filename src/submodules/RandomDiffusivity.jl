@@ -6,12 +6,6 @@ using Interpolations: cubic_spline_interpolation
 import SpecialFunctions: zeta
 import ArgCheck: @argcheck
 
-macro unpack_DiffusivityStore1D(q)
-    code = Expr(:block, [ :($field = $q.$field)
-			 for field in fieldnames(DiffusivityStore1D) ]...)
-    esc(code)
-end
-
 function DiffusivityStore1D(z::Int64, α::Float64, resolution::Integer,
                           min_κ₀::Float64)
     M_α = zeta(α) / min_κ₀
@@ -25,7 +19,7 @@ function DiffusivityStore1D(z::Int64, α::Float64, resolution::Integer,
 end
 
 function interpolate_κ!(y::Vec64, κ₀::Vec64, dstore::DiffusivityStore1D)
-    @unpack_DiffusivityStore1D(dstore)
+    vals = dstore.vals
     @argcheck length(κ₀) == length(vals)
     KL_expansion!(y, κ₀, dstore)
     x = range(0, 1, length(vals))
@@ -33,7 +27,7 @@ function interpolate_κ!(y::Vec64, κ₀::Vec64, dstore::DiffusivityStore1D)
 end
 
 function KL_expansion!(y::Vec64, κ₀::Vec64, dstore::DiffusivityStore1D)
-    @unpack_DiffusivityStore1D(dstore)
+    (;α, M_α, coef, vals, plan) = dstore
     for j in eachindex(y)
         coef[j] = y[j] / (M_α * j^α)
     end
