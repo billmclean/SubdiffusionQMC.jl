@@ -5,7 +5,12 @@ import SpecialFunctions: erfcx
 using PyPlot
 import Printf: @printf
 
-fast_method = true
+fast_method = false
+if fast_method
+    @printf("Using exponential sum approximation.\n")
+else
+    @printf("Using direct evaluation of the memory term.\n")
+end
 
 E_half(x) = erfcx(-x)
 
@@ -81,26 +86,39 @@ xlabel(L"$x$")
 grid(true)
 title("Solution at t = $T when f ≡ 0")
 
-Nₜ = 5
-Nₕ = 5
-nrows = 4
+Nₜ = 40
+Nₕ = 40
+nrows = 5
 max_error = zeros(nrows)
-@printf("\n%6s  %6s  %10s  %8s\n\n", "Nₜ", "Nₕ", "Error", "rate")
+@printf("\n%6s  %6s  %10s  %8s  %8s\n\n", 
+	"Nₜ", "Nₕ", "Error", "rate", "seconds")
 for row = 1:nrows
-    local U, x, t
+    local U, x, t, r, tol, Δx, estore
     global Nₕ, Nₜ
     Nₜ *= 2
     Nₕ *= 2
     x = collect(range(0, 1, Nₕ+1))
     x = OVec64(x, 0:Nₕ)
     t = graded_mesh(Nₜ, γ, T)
-    U = IBVP_solution(x, t, α, κ, f_homogeneous, u₀_homogeneous, ξ, w)
+    start = time()
+    if fast_method
+        r = 2
+        tol = 1e-8
+        Δx = 0.5
+        estore = ExponentialSumStore(t, Nₕ, α, r, tol, Δx)
+        U = IBVP_solution(x, κ, f_homogeneous, u₀_homogeneous, ξ, w, estore)
+    else
+        U = IBVP_solution(x, t, α, κ, f_homogeneous, u₀_homogeneous, ξ, w)
+    end
+    elapsed = time() - start
     max_error[row] = maximum(abs, U - u_homogeneous.(x, t'))
     if row == 1
-	@printf("%6d  %6d  %10.2e\n", Nₜ, Nₕ, max_error[row])
+	@printf("%6d  %6d  %10.2e  %8s  %8.3f\n", 
+		Nₜ, Nₕ, max_error[row], "", elapsed)
     else
 	rate = log2(max_error[row-1]/max_error[row])
-	@printf("%6d  %6d  %10.2e  %8.3f\n", Nₜ, Nₕ, max_error[row], rate)
+	@printf("%6d  %6d  %10.2e  %8.3f  %8.3f\n", 
+		Nₜ, Nₕ, max_error[row], rate, elapsed)
     end
 end
 

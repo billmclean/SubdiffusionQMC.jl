@@ -4,15 +4,16 @@ using OffsetArrays
 import SpecialFunctions: gamma
 
 α = 0.75
-Nₜ = 20
-Nₕ = 15
-γ = 2.5
-final_time = 2.0
-r = 3
+Nₜ = 1280
+γ = 2 / α
+final_time = 1.0
+r = 2
 tol = 1e-8
 Δx = 0.5
 t = graded_mesh(Nₜ, γ, final_time)
 estore = ExponentialSumStore(t, Nₕ, α, r, tol, Δx)
+@printf("Mesh on [0, %g] with Nₜ = %d, γ = %g.\n", final_time, Nₜ, γ)
+@printf("Exponential sum with r = %d, tol = %g, Δx = %g\n", r, tol, Δx)
 
 npts = 500
 t_minus_s = 10.0 .^ range(log10(estore.δ), log10(t[Nₜ]), npts)
@@ -20,6 +21,8 @@ t_minus_s = 10.0 .^ range(log10(estore.δ), log10(t[Nₜ]), npts)
 M₊ = OffsetVector{Int64}(undef, npts)
 M₋ = similar(M₊)
 for n in eachindex(t_minus_s)
+    local Σ
+    global ρ, M₊, M₋
     Σ, M₊[n], M₋[n] = exponential_sum(t_minus_s[n], estore)
     ρ[n] = 1 - gamma(1-α) * t_minus_s[n]^α * Σ
 end
