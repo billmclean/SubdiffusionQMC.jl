@@ -1,12 +1,17 @@
 \documentclass[a4paper,12pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath,amsthm}
+\usepackage{tikz}
+\usepackage{algorithm,algpseudocode}
 \usepackage[margin=2cm]{geometry}
+\usepackage{hyperref}
+\usepackage[capitalize]{cleveref}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newcommand{\bs}[1]{\boldsymbol{#1}}
 \newcommand{\ud}{\mathrm{d}}
 \newcommand{\ue}{\mathrm{e}}
 \newcommand{\ui}{\mathrm{i}}
+\newcommand{\idx}{\mathrm{idx}}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newtheorem{theorem}{Theorem}
 \newtheorem{lemma}[theorem]{Lemma}
@@ -18,6 +23,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{document}
 \maketitle
+\tableofcontents
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Generalised Crank--Nicolson scheme}
 We consider a (stiff) system of fractional ODEs,
@@ -514,6 +520,117 @@ we obtain a linear system for~$\bs{U}^n$,
     -\frac{\sin\pi\alpha}{\pi}\sum_{m=-M_-}^{M_+}\bs{S}^n_m\biggr).
 \end{multline*}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Random diffusivity}
+
+In 1D, we define
+\[
+\psi_j(x)=\frac{\sin(j\pi x)}{M_pj^{1/p}}
+    \quad\text{for $x\in(0,1)$ and $0<p<1$,}
+\]
+and then, as a model for the KL-expansion, let
+\[
+\kappa(x,\bs{y})=\kappa_0(x)+\sum_{j=1}^z y_j\psi_j(x)
+\]
+where $\bs{y}=(y_j)_{j=1}^z$ is a sequence of random numbers, uniformly
+distributed in the interval~$[-1/2,1/2]$.  The term~$\kappa_0(\bs{x})$ is
+assumed to satisfy
+\[
+\kappa_0(x)\ge\kappa_{0,\min}>0\quad\text{for $x\in(0,1)$,}
+\]
+and the constant $M_p$ is chosen to guarantee that
+\[
+\kappa(x,\bs{y})\ge\tfrac12\kappa_{0,\min}\quad\text{for $x\in(0,1)$.}
+\]
+Since
+\[
+\biggl|\sum_{j=1}^zy_j\psi_j(x)\biggr|\le\frac{1}{2M_p}\sum_{j=1}^zj^{-1/p}
+    <\frac{1}{2M_p}\sum_{j=1}^\infty j^{-1/p}=\frac{\zeta(1/p)}{2M_p},
+\]
+where $\zeta$ denotes the Riemann zeta function, it suffices to choose
+\[
+M_p\ge\frac{\zeta(1/p)}{\kappa_{0,\min}}.
+\]
+
+\begin{algorithm}[t]
+\caption{Construction of the sequence $(\idx_j)_{j=1}^z$
+for $z=\tfrac12n(n+1)$.} \label{alg: idx}
+\begin{algorithmic}
+\State $j\gets 1$
+\For{$r=2:n+1$}
+    \For{$k_2=1:r-1$}
+        \State $k_1\gets r-k_2$
+        \State $\idx_j\gets(k_1,k_2)$
+    \EndFor
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+For a given~$n$, the pseudocode in \cref{alg: idx} defines a sequence
+of ordered pairs~$\idx_j$ for $1\le j\le z=\tfrac12n(n+1)$.  In 2D, we define
+\[
+\psi_j(\bs{x})=\frac{\sin(k_1\pi x_1)\sin(k_2\pi x_2)}{M_p(k_1+k_2)^{2/p}}
+\quad\text{for $\bs{x}\in(0,1)^2$, $(k_1,k_2)=\idx_j$ and $0<p<1$,}
+\]
+and then let
+\[
+\kappa(\bs{x},\bs{y})=\kappa_0(\bs{x})+\sum_{j=1}^z y_j\psi_j(\bs{x}),
+\]
+where $\bs{y}=(y_j)_{j=1}^z$ is as before. Since
+\[
+\biggl|\sum_{j=1}^zy_j\psi_j(\bs{x})\biggr|\le\frac{1}{2M_p}\sum_{k_2=1}^n
+    \sum_{k_1=1}^{n-k_2}\frac{1}{(k_1+k_2)^{2/p}}
+    =\frac{1}{2M_p}\sum_{r=2}^{n+1}\frac{r-1}{r^{2/p}}
+    <\frac{1}{2M_p}\sum_{r=2}^\infty\frac{r-1}{r^{2/p}}
+\]
+and
+\[
+\sum_{r=2}^\infty\frac{r-1}{r^{2/p}}=\sum_{r=1}^\infty\frac{r-1}{r^{2/p}}
+    =\sum_{r=1}^\infty r^{-(2/p-1)}
+    -\sum_{r=1}^\infty r^{-2/p}
+    =\zeta(2p^{-1}-1)-\zeta(2p^{-1}),
+\]
+it suffices to choose
+\[
+M_p\ge\frac{\zeta(2p^{-1}-1)-\zeta(2p^{-1})}{\kappa_{0,\min}}.
+\]
+
+
+
+
+\begin{figure}
+\caption{Each blue number is the value of~$j$ for which $\idx_j=(k_1,k_2)$, in
+the case when $n=4$ and so $z=\tfrac12n(n+1)=10$.}
+\label{fig: idx}
+\begin{center}
+\begin{tikzpicture}
+\draw[->] (-1,0) -- (5,0);
+\node[right] at (5,0) {$k_1$};
+\draw[->] (0,-1) -- (0,5);
+\node[left] at (0,5) {$k_2$};
+\foreach \k in {1,2,3,4}
+    \node[below] at (\k,0) {$\k$};
+\foreach \l in {1,2,3,4}
+    \node[left] at (0,\l) {$\l$};
+\node[blue] at (1,1) {$1$};
+\node[blue] at (2,1) {$2$};
+\node[blue] at (1,2) {$3$};
+\node[blue] at (3,1) {$4$};
+\node[blue] at (2,2) {$5$};
+\node[blue] at (1,3) {$6$};
+\node[blue] at (4,1) {$7$};
+\node[blue] at (3,2) {$8$};
+\node[blue] at (2,3) {$9$};
+\node[blue] at (1,4) {$10$};
+\end{tikzpicture}
+\end{center}
+\end{figure}
+
+
+
+
+
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -576,13 +693,6 @@ It then follows~\cite[Theorem~3]{McLean2018} that
     \le t^\beta\,\frac{G_r\ue^{-2\pi r/\Delta x}}{1-e^{-2\pi r/\Delta x}}
     \le(C+D)\frac{\ue^{-2\pi r/\Delta x}}{1-e^{-2\pi r/\Delta x}}.
 \]
-
-
-
-
-
-
-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
