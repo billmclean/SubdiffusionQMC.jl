@@ -1,13 +1,13 @@
 using SubdiffusionQMC
 using PyPlot
 
-α = 2.0
+p = 1/2
 resolution = 256
 z = 50
 κ₀(x) = exp(-x)
 min_κ₀ = exp(-1)
 
-dstore = DiffusivityStore1D(z, α, resolution, min_κ₀)
+dstore = DiffusivityStore1D(z, p, resolution, min_κ₀)
 x = range(0, 1, resolution+2)
 
 

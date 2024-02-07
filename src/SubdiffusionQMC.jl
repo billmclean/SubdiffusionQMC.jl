@@ -4,7 +4,8 @@ import FFTW
 using OffsetArrays
 
 export Vec64, OVec64, Mat64, OMat64
-export DiffusivityStore1D, ExponentialSumStore, interpolate_κ!
+export DiffusivityStore1D, DiffusivityStore2D, ExponentialSumStore 
+export double_indices, interpolate_κ!, slow_κ
 export graded_mesh, weights, weights!, exponential_sum
 export generalised_crank_nicolson!, crank_nicolson!
 
@@ -13,12 +14,22 @@ const OVec64 = OffsetVector{Float64}
 const Mat64 = Matrix{Float64}
 const OMat64 = OffsetMatrix{Float64}
 const AMat64 = AbstractMatrix{Float64}
+const IdxPair = Tuple{Int64, Int64}
 
 struct DiffusivityStore1D
-    α::Float64
-    M_α::Float64
+    p::Float64
+    Mₚ::Float64
     coef::Vec64 # Coefficients in the KL expansion.
     vals::Vec64 # Values of KL expansion at interpolation points.
+    plan::FFTW.r2rFFTWPlan
+end
+
+struct DiffusivityStore2D
+    idx::Vector{IdxPair}
+    p::Float64
+    Mₚ::Float64
+    coef::Mat64
+    vals::Mat64
     plan::FFTW.r2rFFTWPlan
 end
 
@@ -34,7 +45,9 @@ struct ExponentialSumStore
     tol::Float64
 end
 
+function double_indices end
 function interpolate_κ! end
+function slow_κ end
 include("submodules/RandomDiffusivity.jl")
 
 include("submodules/FEM1D.jl")
