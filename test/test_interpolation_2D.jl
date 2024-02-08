@@ -18,17 +18,23 @@ N₁, N₂ = resolution
 
 x₁_vals = range(0, 1, N₁)
 x₂_vals = range(0, 1, N₂)
-#x₁_vals = range(0, 1, 2(N₁+1)+1)
-#x₂_vals = range(0, 1, 2(N₂+1)+1)
 κ₀_vals = Float64[ κ₀(x₁, x₂) for x₁ in x₁_vals, x₂ in x₂_vals ]
 κ = interpolate_κ!(y, κ₀_vals, dstore)
 κ_vals = Float64[ κ(x₁, x₂) for x₁ in x₁_vals, x₂ in x₂_vals ]
 
 slow_κ_vals = Float64[ slow_κ(x₁, x₂, y, κ₀, dstore) 
 		       for x₁ in x₁_vals, x₂ in x₂_vals ]
-#max_error = maximum(abs, κ_vals - slow_κ_vals)
+max_discrepancy = maximum(abs, κ_vals - slow_κ_vals)
+@printf("maximum FFT discrepancy = %0.3e\n", max_discrepancy)
+
+x₁_vals = range(0, 1, 2(N₁+1)+1)
+x₂_vals = range(0, 1, 2(N₂+1)+1)
+κ₀_vals = Float64[ κ₀(x₁, x₂) for x₁ in x₁_vals, x₂ in x₂_vals ]
+κ_vals = Float64[ κ(x₁, x₂) for x₁ in x₁_vals, x₂ in x₂_vals ]
+slow_κ_vals = Float64[ slow_κ(x₁, x₂, y, κ₀, dstore) 
+		       for x₁ in x₁_vals, x₂ in x₂_vals ]
 max_error = maximum(abs, κ_vals - slow_κ_vals)
-@printf("maximum interpolation error in sample = %0.3e\n", max_error)
+@printf("maximum interpolation error = %0.3e\n", max_error)
 
 figure(1)
 contourf(x₁_vals, x₂_vals, κ₀_vals)

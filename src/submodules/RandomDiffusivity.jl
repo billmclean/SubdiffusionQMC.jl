@@ -44,7 +44,7 @@ function DiffusivityStore2D(idx::Vector{IdxPair}, z::Int64, p::Float64,
 	max_k₂ = max(k₂, max_k₂)
     end
     N₁, N₂ = resolution
-        if max_k₁ > N₁÷2 || max_k₂ > N₂÷2
+    if max_k₁ > N₁÷2 || max_k₂ > N₂÷2
         error("Interpolation grid is too coarse to resolve Fourier modes")
     end
     coef = zeros(N₁-2, N₂-2)
@@ -84,7 +84,8 @@ end
 
 function KL_expansion!(y::Vec64, κ₀::Vec64, dstore::DiffusivityStore1D)
     (;p, Mₚ, coef, vals, plan) = dstore
-    for j in eachindex(y)
+    for j in eachindex(idx)
+        k₁, k₂ = idx[j]
 	coef[j] = y[j] / j^(1/p)
     end
     sin_sum!(vals, coef, plan)
@@ -98,7 +99,7 @@ function KL_expansion!(y::Vec64, κ₀::Mat64, dstore::DiffusivityStore2D)
     fill!(coef, 0.0)
     for j in eachindex(idx)
 	k₁, k₂ = idx[j]
-	coef[j] = y[j] / (k₁ + k₂)^(2/p)
+	coef[k₁, k₂] = y[j] / (k₁ + k₂)^(2/p)
     end
     sin_sin_sum!(vals, coef, plan)
     N₁, N₂ = size(vals)
