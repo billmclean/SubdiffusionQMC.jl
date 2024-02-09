@@ -1,6 +1,8 @@
 module SubdiffusionQMC
 
 import FFTW
+import SparseArrays
+import SimpleFiniteElements
 using OffsetArrays
 
 export Vec64, OVec64, Mat64, OMat64
@@ -14,6 +16,7 @@ const OVec64 = OffsetVector{Float64}
 const Mat64 = Matrix{Float64}
 const OMat64 = OffsetMatrix{Float64}
 const AMat64 = AbstractMatrix{Float64}
+const SparseCholeskyFactor = SparseArrays.CHOLMOD.Factor{Float64}
 const IdxPair = Tuple{Int64, Int64}
 
 struct DiffusivityStore1D
@@ -43,6 +46,18 @@ struct ExponentialSumStore
     w::OVec64
     δ::Float64
     tol::Float64
+end
+
+struct PDEStore
+    κ₀::Function
+    dof::SimpleFiniteElements.DegreesOfFreedom
+    b::Vec64
+    solver::Symbol
+    P::SparseCholeskyFactor
+    wkspace::Mat64
+    u::Vec64
+    pcg_tol::Float64
+    pcg_maxiterations::Integer
 end
 
 function double_indices end

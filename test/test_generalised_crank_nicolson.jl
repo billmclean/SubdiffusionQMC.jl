@@ -5,7 +5,7 @@ import SpecialFunctions: erfcx
 using PyPlot
 import Printf: @printf
 
-fast_method = false
+fast_method = true
 if fast_method
     @printf("Using exponential sum approximation.\n")
 else

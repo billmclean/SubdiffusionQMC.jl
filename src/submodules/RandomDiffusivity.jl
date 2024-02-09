@@ -84,8 +84,7 @@ end
 
 function KL_expansion!(y::Vec64, κ₀::Vec64, dstore::DiffusivityStore1D)
     (;p, Mₚ, coef, vals, plan) = dstore
-    for j in eachindex(idx)
-        k₁, k₂ = idx[j]
+    for j in eachindex(y)
 	coef[j] = y[j] / j^(1/p)
     end
     sin_sum!(vals, coef, plan)
