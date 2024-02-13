@@ -6,7 +6,7 @@ import SimpleFiniteElements
 using OffsetArrays
 
 export Vec64, OVec64, Mat64, OMat64
-export DiffusivityStore1D, DiffusivityStore2D, ExponentialSumStore 
+export DiffusivityStore1D, DiffusivityStore2D, ExponentialSumStore, PDEStore 
 export double_indices, interpolate_κ!, slow_κ
 export graded_mesh, weights, weights!, exponential_sum
 export generalised_crank_nicolson!, crank_nicolson!
@@ -66,6 +66,8 @@ function slow_κ end
 include("submodules/RandomDiffusivity.jl")
 
 include("submodules/FEM1D.jl")
+
+include("submodules/FEM2D.jl")
 
 function graded_mesh end
 function weights end

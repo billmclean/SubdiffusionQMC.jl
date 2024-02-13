@@ -57,7 +57,7 @@ title("Solution at t = $T when f ≡ 0")
 u_inhomogeneous(x, t) = t * exp(-t) * sinpi(x)
 f_inhomogeneous(x, t) = (1 + (κ_const * π^2 - 1) * t) * exp(-t) * sinpi(x)
 
-U = IBVP_solution(x, t, κ, f_inhomogeneous, x -> 0.0, ξ, w)
+U = IBVP_solution(x, t, x -> κ_const, f_inhomogeneous, x -> 0.0, ξ, w)
 
 figure(2)
 plot(xx, u_inhomogeneous.(xx, T),
@@ -87,6 +87,7 @@ M = 5
 z = 30
 U = OffsetArray(zeros(Nₕ+1, Nₜ+1, 5), 0:Nₕ, 0:Nₜ, 1:M)
 for m = 1:M
+    local y
     y = rand(z) .- 1/2
     x_interpolation = range(0, 1, length(dstore.vals))
     κ_ = interpolate_κ!(y, κ₀.(x_interpolation), dstore)
