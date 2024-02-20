@@ -18,7 +18,7 @@ function IBVP_solution(x::OVec64, t::OVec64, κ::Function, f::Function,
     M = mass_matrix(x)
     U = OMat64(zeros(Nₕ+1, Nₜ+1), 0:Nₕ, 0:Nₜ)
     U[:,0] .= u₀.(x)
-    crank_nicolson!(U, M, A, t, get_load_vector!, f, x, ξ, w)
+    crank_nicolson_1D!(U, M, A, t, get_load_vector!, f, x, ξ, w)
     return U
 end
 
