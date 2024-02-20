@@ -9,7 +9,7 @@ export Vec64, OVec64, Mat64, OMat64
 export DiffusivityStore1D, DiffusivityStore2D, ExponentialSumStore, PDEStore 
 export double_indices, interpolate_κ!, slow_κ
 export graded_mesh, weights, weights!, exponential_sum
-export generalised_crank_nicolson!, crank_nicolson!
+export generalised_crank_nicolson!, crank_nicolson_1D!, crank_nicolson_2D!
 
 const Vec64 = Vector{Float64} 
 const OVec64 = OffsetVector{Float64}
@@ -76,7 +76,8 @@ function exponential_sum end
 include("submodules/FractionalDerivatives.jl")
 
 function generalised_crank_nicolson! end
-function crank_nicolson! end
+function crank_nicolson_1D! end
+function crank_nicolson_2D! end
 function weights end
 include("submodules/Timestepping.jl")
 
