@@ -1,7 +1,8 @@
 module Timestepping
 
 import ..Vec64, ..Mat64, ..OVec64, ..OMat64, ..AMat64, ..ExponentialSumStore
-import ..generalised_crank_nicolson!, ..crank_nicolson!, 
+import ..generalised_crank_nicolson!, 
+       ..crank_nicolson_1D!, ..crank_nicolson_2D!,
        ..graded_mesh, ..weights
 import LinearAlgebra: SymTridiagonal
 import OffsetArrays: OffsetVector
@@ -106,7 +107,7 @@ function generalised_crank_nicolson!(U::OMat64, M::SymTridiagonal,
 end
 
 """
-    crank_nicolson!(U, M, A, t, get_load_vector!)
+    crank_nicolson_1D!(U, M, A, t, get_load_vector!)
 
 Solves the spatially-discrete diffusion problem `Mu̇ + Au = F(t)`.
 The Crank-Nicolson scheme is used to compute `U[j,n] ≈ u(x[j], t[n])`,
@@ -125,7 +126,7 @@ The array dimensions are as follows.
     M[i,j]	for 1 ≤ i ≤ Nₕ-1, 1 ≤ j ≤ Nₕ-1,
     t[n]	for 0 ≤ n ≤ Nₜ.
 """
-function crank_nicolson!(U::OMat64, M::AMat64, A::AMat64, 
+function crank_nicolson_1D!(U::OMat64, M::AMat64, A::AMat64, 
 	                 t::OVec64, get_load_vector!::Function,
 			 parameters...)
     Nₜ = lastindex(t)
@@ -136,13 +137,34 @@ function crank_nicolson!(U::OMat64, M::AMat64, A::AMat64,
     for n = 1:Nₜ
         τ = t[n] - t[n-1]
         @. B = M + (τ/2) * A
-	midpoint = (t[n] + t[n-1]) / 2
-	get_load_vector!(F, midpoint, parameters...)
-	mul!(rhs, A, U[1:Nₕ-1,n-1])
-	rhs .= F - rhs
-	scal!(τ, rhs) # rhs = τ F - τ A Uⁿ⁻¹
-	ldiv!(B, rhs) # rhs = ΔUⁿ
-	U[1:Nₕ-1,n] .= U[1:Nₕ-1,n-1] .+ rhs
+		midpoint = (t[n] + t[n-1]) / 2
+		get_load_vector!(F, midpoint, parameters...)
+		mul!(rhs, A, U[1:Nₕ-1,n-1])
+		rhs .= F - rhs
+		scal!(τ, rhs) # rhs = τ F - τ A Uⁿ⁻¹
+		ldiv!(B, rhs) # rhs = ΔUⁿ
+		U[1:Nₕ-1,n] .= U[1:Nₕ-1,n-1] .+ rhs
+    end
+end
+
+function crank_nicolson_2D!(U::OMat64, M::AMat64, A::AMat64, 
+	                 t::OVec64, get_load_vector!::Function,
+			 parameters...)
+    Nₜ = lastindex(t)
+    Nₕ = lastindex(U, 1)
+    F = Vec64(undef, Nₕ)
+    rhs = similar(F)
+    for n = 1:Nₜ
+        τ = t[n] - t[n-1]
+        B = M + (τ/2) * A
+		midpoint = (t[n] + t[n-1]) / 2
+		get_load_vector!(F, midpoint, parameters...)
+		mul!(rhs, A, U[1:Nₕ,n-1])
+		rhs .= F - rhs
+		scal!(τ, rhs) # rhs = τ F - τ A Uⁿ⁻¹
+#		ldiv!(B, rhs) # rhs = ΔUⁿ
+    	ΔUⁿ = B \ rhs
+		U[1:Nₕ,n] .= U[1:Nₕ,n-1] .+ ΔUⁿ
     end
 end
 
