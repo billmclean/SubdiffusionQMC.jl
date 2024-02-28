@@ -4,7 +4,7 @@ import ..Vec64, ..Mat64, ..OVec64, ..OMat64, ..AMat64, ..ExponentialSumStore
 import ..generalised_crank_nicolson!, 
        ..crank_nicolson_1D!, ..crank_nicolson_2D!,
        ..graded_mesh, ..weights
-import LinearAlgebra: SymTridiagonal
+import LinearAlgebra: SymTridiagonal, norm
 import OffsetArrays: OffsetVector
 import SpecialFunctions: gamma
 import LinearAlgebra: mul!, ldiv!, cholesky!, axpby!
@@ -157,15 +157,28 @@ function crank_nicolson_2D!(U::OMat64, M::AMat64, A::AMat64,
     for n = 1:Nₜ
         τ = t[n] - t[n-1]
         B = M + (τ/2) * A
-		midpoint = (t[n] + t[n-1]) / 2
-		get_load_vector!(F, midpoint, parameters...)
-		mul!(rhs, A, U[1:Nₕ,n-1])
-		rhs .= F - rhs
-		scal!(τ, rhs) # rhs = τ F - τ A Uⁿ⁻¹
-#		ldiv!(B, rhs) # rhs = ΔUⁿ
-    	ΔUⁿ = B \ rhs
-		U[1:Nₕ,n] .= U[1:Nₕ,n-1] .+ ΔUⁿ
+        midpoint = (t[n] + t[n-1]) / 2
+        get_load_vector!(F, midpoint, parameters...)
+        mul!(rhs, A, U[1:Nₕ,n-1])
+        scal!(τ, rhs) # rhs = τ F - τ A Uⁿ⁻¹
+        ldiv!(B, rhs) # rhs = B \ rhs = ΔUⁿ
+	U[1:Nₕ,n] .= U[1:Nₕ,n-1] .+ rhs
     end
 end
 
+function euler_2D!(U::OMat64, M::AMat64, A::AMat64, 
+	           t::OVec64, get_load_vector!::Function,
+		   parameters...)
+    Nₜ = lastindex(t)
+    Nₕ = lastindex(U, 1)
+    F = Vec64(undef, Nₕ)
+    rhs = similar(F)
+    for n = 1:Nₜ
+        τ = t[n] - t[n-1]
+        B = M + τ * A
+        get_load_vector!(F, t[n], parameters...)
+        rhs = τ * F + M * U[1:Nₕ,n-1]
+        U[1:Nₕ,n] = B \ rhs
+    end
+end
 end # module

@@ -1,10 +1,13 @@
 using SimpleFiniteElements
 import SimpleFiniteElements.Utils: gmsh2pyplot
+import SimpleFiniteElements.FEM: assemble_vector!
 using SubdiffusionQMC
 import OffsetArrays: OffsetArray
 using PyPlot
 using Printf
 import SimpleFiniteElements.Poisson: ∫∫a_∇u_dot_∇v!, ∫∫c_u_v!, ∫∫f_v!
+using LinearAlgebra
+import SubdiffusionQMC.Timestepping: euler_2D!
 
 # Define the solver and path to the geometry file
 #solver = :pcg
@@ -26,8 +29,11 @@ dof = DegreesOfFreedom(mesh, essential_bcs)
 pcg_tol, pcg_maxiterations = 1e-8, 100 #not used
 
 function get_load_vector!(F::Vec64, t::Float64, pstore::PDEStore, f::Function)
-    linear_functionals = Dict("Omega" => (∫∫f_v!, (x, y) -> f(x, y, t)))
-    F, u_fix = assemble_vector(pstore.dof, linear_functionals)
+#    linear_functionals = Dict("Omega" => (∫∫f_v!, (x, y) -> f(x, y, t)))
+#    F[:], u_fix = assemble_vector(pstore.dof, linear_functionals)
+    fill!(F, 0.0)
+    assemble_vector!(F, "Omega", [(∫∫f_v!, (x, y) -> f(x, y, t))], dof, 1)
+    println("t = $t, ||F|| = $(norm(F))")
 end
 
 function IBVP_solution(t::OVec64, κ::Function, f::Function,
@@ -46,31 +52,32 @@ function IBVP_solution(t::OVec64, κ::Function, f::Function,
     uh0 = get_nodal_values(u₀, dof) 
     U_free[:,0] = uh0[1:dof.num_free]
     # Use the Crank-Nicolson method to solve the PDE
-    crank_nicolson_2D!(U_free, M, A, t, get_load_vector!, pstore, f)
+    euler_2D!(U_free, M, A, t, get_load_vector!, pstore, f)
+#    crank_nicolson_2D!(U_free, M, A, t, get_load_vector!, pstore, f)
     return U_free
 end
 
 # Set up the time domain
 T = 1.0
-ε = 0.1
 Nₜ = 20  # Number of time steps
 t = collect(range(0, T, Nₜ+1))
 t = OVec64(t, 0:Nₜ)
+#ε = 0.1
 #t[1:Nₜ-1] .+= (ε/Nₜ) * randn(Nₜ-1)
 x, y, triangles = gmsh2pyplot(dof)
 
 #Define equation coefficients
 κ_const = 0.02
-k = 1
-λ = κ_const * (k * π)^2
-u_homogeneous(x, y, t) = exp(-λ * t) * sinpi(k * x) * sinpi(k * y)
+kx, ky = 1, 1
+λ = κ_const * (kx^2 + ky^2) * π^2
+u_homogeneous(x, y, t) = exp(-λ * t) * sinpi(kx * x) * sinpi(ky * y)
 exact_u_homogeneous = get_nodal_values((x, y) -> u_homogeneous(x, y, T), dof)
 f_homogeneous(x, y, t) = 0.0
 u₀_homogeneous(x, y) = u_homogeneous(x, y, 0.0)
 pstore = PDEStore((x, y) -> κ_const, f_homogeneous, dof, 
                  solver, pcg_tol, pcg_maxiterations)
 
-#Solve the numerical solution
+#Compute the numerical solution
 U_free = IBVP_solution(t, (x, y) -> κ_const, f_homogeneous, u₀_homogeneous, pstore)
 U_fix = OMat64(zeros(dof.num_fixed, Nₜ+1), 1:dof.num_fixed, 0:Nₜ)
 U = [U_free; U_fix]
