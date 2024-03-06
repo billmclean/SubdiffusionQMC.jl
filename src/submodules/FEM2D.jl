@@ -10,7 +10,7 @@ function PDEStore(κ₀::Function, f::Function, dof::DegreesOfFreedom,
                   solver::Symbol, pcg_tol::Float64, pcg_maxiterations::Integer)
     bilinear_forms_A = Dict("Omega" => (∫∫a_∇u_dot_∇v!, κ₀))
     bilinear_forms_M = Dict("Omega" => (∫∫c_u_v!, 1.0))
-    linear_functionals = Dict("Omega" => (∫∫f_v!, f))
+#    linear_functionals = Dict("Omega" => (∫∫f_v!, f))
     A_free, A_fix = assemble_matrix(dof, bilinear_forms_A)
     M_free, M_fix = assemble_matrix(dof, bilinear_forms_M)
     P = cholesky(M_free + A_free)

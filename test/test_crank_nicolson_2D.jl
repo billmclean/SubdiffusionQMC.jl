@@ -33,12 +33,13 @@ function get_load_vector!(F::Vec64, t::Float64, pstore::PDEStore, f::Function)
 #    F[:], u_fix = assemble_vector(pstore.dof, linear_functionals)
     fill!(F, 0.0)
     assemble_vector!(F, "Omega", [(∫∫f_v!, (x, y) -> f(x, y, t))], dof, 1)
-    println("t = $t, ||F|| = $(norm(F))")
+#    println("t = $t, ||F|| = $(norm(F))")
 end
 
 function IBVP_solution(t::OVec64, κ::Function, f::Function,
     u₀::Function, pstore::PDEStore)
     # Set A and M to the free part of the assembled matrices
+    dof = pstore.dof
     bilinear_forms_A = Dict("Omega" => (∫∫a_∇u_dot_∇v!, κ))
     bilinear_forms_M = Dict("Omega" => (∫∫c_u_v!, 1.0))
     A_free, A_fix = assemble_matrix(dof, bilinear_forms_A)
@@ -52,8 +53,8 @@ function IBVP_solution(t::OVec64, κ::Function, f::Function,
     uh0 = get_nodal_values(u₀, dof) 
     U_free[:,0] = uh0[1:dof.num_free]
     # Use the Crank-Nicolson method to solve the PDE
-    euler_2D!(U_free, M, A, t, get_load_vector!, pstore, f)
-#    crank_nicolson_2D!(U_free, M, A, t, get_load_vector!, pstore, f)
+#    euler_2D!(U_free, M, A, t, get_load_vector!, pstore, f)
+    crank_nicolson_2D!(U_free, M, A, t, get_load_vector!, pstore, f)
     return U_free
 end
 
@@ -62,10 +63,7 @@ T = 1.0
 Nₜ = 20  # Number of time steps
 t = collect(range(0, T, Nₜ+1))
 t = OVec64(t, 0:Nₜ)
-#ε = 0.1
-#t[1:Nₜ-1] .+= (ε/Nₜ) * randn(Nₜ-1)
 x, y, triangles = gmsh2pyplot(dof)
-
 #Define equation coefficients
 κ_const = 0.02
 kx, ky = 1, 1
@@ -76,7 +74,6 @@ f_homogeneous(x, y, t) = 0.0
 u₀_homogeneous(x, y) = u_homogeneous(x, y, 0.0)
 pstore = PDEStore((x, y) -> κ_const, f_homogeneous, dof, 
                  solver, pcg_tol, pcg_maxiterations)
-
 #Compute the numerical solution
 U_free = IBVP_solution(t, (x, y) -> κ_const, f_homogeneous, u₀_homogeneous, pstore)
 U_fix = OMat64(zeros(dof.num_fixed, Nₜ+1), 1:dof.num_fixed, 0:Nₜ)

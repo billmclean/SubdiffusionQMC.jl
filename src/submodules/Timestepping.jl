@@ -7,7 +7,7 @@ import ..generalised_crank_nicolson!,
 import LinearAlgebra: SymTridiagonal, norm
 import OffsetArrays: OffsetVector
 import SpecialFunctions: gamma
-import LinearAlgebra: mul!, ldiv!, cholesky!, axpby!
+import LinearAlgebra: mul!, ldiv!, cholesky!, axpby!, cholesky
 import LinearAlgebra.BLAS: scal!
 
 """
@@ -148,21 +148,46 @@ function crank_nicolson_1D!(U::OMat64, M::AMat64, A::AMat64,
 end
 
 function crank_nicolson_2D!(U::OMat64, M::AMat64, A::AMat64, 
-	                 t::OVec64, get_load_vector!::Function,
-			 parameters...)
+                            t::OVec64, get_load_vector!::Function,
+                            parameters...)
     Nₜ = lastindex(t)
     Nₕ = lastindex(U, 1)
     F = Vec64(undef, Nₕ)
     rhs = similar(F)
     for n = 1:Nₜ
-        τ = t[n] - t[n-1]
-        B = M + (τ/2) * A
+      τ = t[n] - t[n-1]
+      B = M + (τ/2) * A
+      midpoint = (t[n] + t[n-1]) / 2
+      get_load_vector!(F, midpoint, parameters...)
+      mul!(rhs, A, U[1:Nₕ,n-1])
+      rhs .= F - rhs
+      scal!(τ, rhs) # rhs = τ F - τ A Uⁿ⁻¹
+      #ldiv!(B, rhs) # rhs = ΔUⁿ
+      ΔUⁿ = B \ rhs
+      U[1:Nₕ,n] .= U[1:Nₕ,n-1] .+ ΔUⁿ
+    end
+end
+
+function crank_nicolson_2D!(U::OMat64, M::AMat64, A::AMat64, 
+    T::Float64, Nₜ::Integer, get_load_vector!::Function,
+    parameters...)
+    t = collect(range(0, T, Nₜ+1))
+    t = OVec64(t, 0:Nₜ)
+    Nₕ = lastindex(U, 1)
+    F = Vec64(undef, Nₕ)
+    rhs = similar(F)
+    τ = T / Nₜ
+    B = M + (τ/2) * A
+    R = cholesky(B)
+    for n = 1:Nₜ
         midpoint = (t[n] + t[n-1]) / 2
         get_load_vector!(F, midpoint, parameters...)
         mul!(rhs, A, U[1:Nₕ,n-1])
+        rhs .= F - rhs
         scal!(τ, rhs) # rhs = τ F - τ A Uⁿ⁻¹
-        ldiv!(B, rhs) # rhs = B \ rhs = ΔUⁿ
-	U[1:Nₕ,n] .= U[1:Nₕ,n-1] .+ rhs
+#ldiv!(B, rhs) # rhs = ΔUⁿ
+        ΔUⁿ = R \ rhs
+        U[1:Nₕ,n] .= U[1:Nₕ,n-1] .+ ΔUⁿ
     end
 end
 
