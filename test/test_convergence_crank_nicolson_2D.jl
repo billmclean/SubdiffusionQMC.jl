@@ -99,21 +99,22 @@ function compute_error_time(nrows::Int, hmax::Float64, Nₜ::Int)
 end
 
 function compute_error_space(nrows::Int, hmax::Float64, Nₜ::Int)
+    mesh = FEMesh(gmodel, hmax; refinements=nrows-1)
     t = collect(range(0, T, Nₜ+1))
     t = OVec64(t, 0:Nₜ)
     max_error = zeros(nrows)
-    @printf("\n%6s  %6s  %6s %10s  %8s  %8s\n\n", 
-        "Nₜ", "hmax", "τ", "Error", "rate", "seconds")
+    @printf("\n%6s  %8s  %6s  %6s %10s  %8s  %8s\n\n", 
+        "Nₜ", "dof", "hmax", "τ", "Error", "rate", "seconds")
     for k = 1 : nrows
-        local uh_free, mesh, dof, pstore
+        dof = DegreesOfFreedom(mesh[k], essential_bcs)
         hmax /= 2
-        mesh = FEMesh(gmodel, hmax)
-        dof = DegreesOfFreedom(mesh, essential_bcs)
+        hmax = max_elt_diameter(mesh[k])
         pstore = PDEStore((x, y) -> κ_const, f_homogeneous, dof, 
                     solver, pcg_tol, pcg_maxiterations)
         start = time()
         uh_free = IBVP_solution(t, (x, y) -> κ_const, f_homogeneous, u₀_homogeneous, pstore)
         for i = 0 : lastindex(t)
+#        for i in [lastindex(t)]
             u = get_nodal_values((x, y) -> u_homogeneous(x, y, t[i]), dof)
             max_i = maximum(abs, uh_free[:,i] - u[1:dof.num_free])
             max_error[k] = max(max_error[k], max_i)
@@ -121,12 +122,12 @@ function compute_error_space(nrows::Int, hmax::Float64, Nₜ::Int)
         elapsed = time() - start
         τ = T / Nₜ
         if k == 1
-            @printf("%6d  %6f %6f  %10.2e  %8s  %8.3f\n", 
-                Nₜ, hmax, τ, max_error[k], "", elapsed)
+            @printf("%6d  %8d  %6f %6f  %10.2e  %8s  %8.3f\n", 
+                Nₜ, dof.num_free, hmax, τ, max_error[k], "", elapsed)
         else
             rate = log2(max_error[k-1]/max_error[k])
-            @printf("%6d  %6f %6f  %10.2e  %8.3f  %8.3f\n", 
-                Nₜ, hmax, τ, max_error[k], rate, elapsed)
+            @printf("%6d  %8d  %6f %6f  %10.2e  %8.3f  %8.3f\n", 
+                Nₜ, dof.num_free, hmax, τ, max_error[k], rate, elapsed)
         end
     end
 end
@@ -134,9 +135,9 @@ end
 # Usage_space
 #nrows = 4, hmax = 1/4, Nₜ = 80
 #compute_error_space(nrows, hmax, Nₜ)
-compute_error_space(5, 1/2, 32)
+compute_error_space(5, 1/2, 1024)
 
 # Usage_time
 #nrows = 4, hmax = 1/1200, Nₜ = 2
 #compute_error_time(nrows, hmax, Nₜ)
-compute_error_time(4, 1/1200, 2)
+#compute_error_time(4, 1/1200, 2)
