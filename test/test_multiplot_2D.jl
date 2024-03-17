@@ -1,6 +1,6 @@
 using SimpleFiniteElements
 import SimpleFiniteElements.Utils: gmsh2pyplot
-import SimpleFiniteElements.FEM: assemble_vector!
+import SimpleFiniteElements.FEM: assemble_vector!, average_field
 using SubdiffusionQMC
 import OffsetArrays: OffsetArray
 using PyPlot
@@ -56,8 +56,11 @@ function IBVP_solution(t::OVec64, κ::Function, f::Function,
     return U_free
 end
 
+T = 1.0
+f_homogeneous(x, y, t) = 0.0
 κ₀(x, y) = 0.1 * (2 + x * y) 
 min_κ₀ = κ₀(0.0, 0.0)
+x, y, triangles = gmsh2pyplot(dof)
 pstore = PDEStore(κ₀, f_homogeneous, dof, 
                   solver, pcg_tol, pcg_maxiterations)
 p = 0.5
@@ -70,13 +73,28 @@ u₀_bent(x, y) = 5 * (x^2 * (1 - x) + y^2 * (1 - y))  # Example initial conditi
 Nₜ = 50
 t = collect(range(0, T, Nₜ+1))
 t = OVec64(t, 0:Nₜ)
-U_det_free = IBVP_solution(t, κ₀, f_homogeneous, u₀_bent, pstore)
+U_det = IBVP_solution(t, κ₀, f_homogeneous, u₀_bent, pstore)
 U_det_fix = OMat64(zeros(dof.num_fixed, Nₜ+1), 1:dof.num_fixed, 0:Nₜ)
+
+uh = [U_det[:,Nₜ]; U_det_fix[:,Nₜ]]
+figure(1)
+plot_trisurf(x, y, uh, cmap="cool")
+xlabel(L"$x$")
+ylabel(L"$y$")
+zlabel(L"$u$")
+grid(true)
+title("Solution at t = $T for κ₀")
+ax = gca()
+bottom, top = ax.get_zlim()
+top = 1.2 * top
+ax.set_zlim(bottom, top)
+
 M = 5
 U_free = OffsetArray(zeros(dof.num_free, Nₜ+1, 5), 1:dof.num_free, 0:Nₜ, 1:M)
 U_fix = OffsetArray(zeros(dof.num_fixed, Nₜ+1, 5), 1:dof.num_fixed, 0:Nₜ, 1:M)
 Nₛ = dof.num_free + dof.num_fixed
 U = OffsetArray(zeros(Nₛ, Nₜ+1, M), 1:Nₛ, 0:Nₜ, 1:M)
+
 for m = 1:M
     local y_vals, pstore
     global U
@@ -90,19 +108,6 @@ for m = 1:M
                   solver, pcg_tol, pcg_maxiterations)
     U_free[:,:,m] = IBVP_solution(t, (x, y) -> κ_(x, y), f_homogeneous, u₀_bent, pstore)    
 end
-
-figure(1)
-uh = [U_det[:,Nₜ]; U_det_fix[:,Nₜ]]
-plot_trisurf(x, y, uh, cmap="cool")
-xlabel(L"$x$")
-ylabel(L"$y$")
-zlabel(L"$u$")
-grid(true)
-title("Solution at t = $T for κ₀")
-ax = gca()
-bottom, top = ax.get_zlim()
-top = 1.2 * top
-ax.set_zlim(bottom, top)
 
 for m = 1:M
     local ax, uh
