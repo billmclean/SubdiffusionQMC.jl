@@ -78,29 +78,15 @@ U_det_fix = OMat64(zeros(dof.num_fixed, Nₜ+1), 1:dof.num_fixed, 0:Nₜ)
 Nₛ = dof.num_free + dof.num_fixed
 uh = [U_det[:,Nₜ]; U_det_fix[:,Nₜ]]
 L₀, _ = average_field(uh, "Omega", dof)
-L_det = fill(L₀, Nₛ)
-figure(1)
-plot_trisurf(x, y, L_det, cmap="cool")
-xlabel(L"$x$")
-ylabel(L"$y$")
-zlabel(L"$u$")
-grid(true)
-title("Average Field Value over the domain at t=$T for κ₀")
-ax = gca()
-bottom, top = ax.get_zlim()
-top = 2 * top
-ax.set_zlim(bottom, top)
-
-M = 5
-U_free = OffsetArray(zeros(dof.num_free, Nₜ+1, 5), 1:dof.num_free, 0:Nₜ, 1:M)
-U_fix = OffsetArray(zeros(dof.num_fixed, Nₜ+1, 5), 1:dof.num_fixed, 0:Nₜ, 1:M)
+M = 100
+L = zeros(Float64, M+1)
+L[1] = L₀
+U_free = OffsetArray(zeros(dof.num_free, Nₜ+1, M), 1:dof.num_free, 0:Nₜ, 1:M)
+U_fix = OffsetArray(zeros(dof.num_fixed, Nₜ+1, M), 1:dof.num_fixed, 0:Nₜ, 1:M)
 Nₛ = dof.num_free + dof.num_fixed
 U = OffsetArray(zeros(Nₛ, Nₜ+1, M), 1:Nₛ, 0:Nₜ, 1:M)
-L₁ = zeros(Float64, M)
-L = OMat64(zeros(Nₛ,M))
-
 for m = 1:M
-    local y_vals, pstore
+    local y_vals, pstore, uh
     global U
     y_vals = rand(z) .- 1/2
     (N₁, N₂) = resolution
@@ -111,20 +97,14 @@ for m = 1:M
     pstore = PDEStore((x, y) -> κ_(x, y), f_homogeneous, dof, 
                   solver, pcg_tol, pcg_maxiterations)
     U_free[:,:,m] = IBVP_solution(t, (x, y) -> κ_(x, y), f_homogeneous, u₀_bent, pstore)    
+    uh = [ U_free[:, Nₜ, m]; U_fix[:, Nₜ, m] ]
+    L[m+1],_ = average_field(uh, "Omega", dof)
 end
 
-for m = 1:M
-    local ax, uh
-    figure(m+1)
-    uh = [ U_free[:, Nₜ, m]; U_fix[:, Nₜ, m] ]
-    L₁[m],_ = average_field(uh, "Omega", dof)
-    L[:,m] = fill(L₁[m], Nₛ)
-    plot_trisurf(x, y, L[:,m], cmap="cool")
-    ax = gca()
-    ax.set_zlim(bottom, top)
-    xlabel(L"$x$")
-    ylabel(L"$y$")
-    zlabel(L"$u$")
-    grid(true)
-    title("Average Field Value over the domain at t=$T")
-end
+figure(1)
+bar(1:M+1, L)
+title("Histogram of all different values")
+xlabel("M")
+ylabel("L[m]")
+grid(true)
+show()
