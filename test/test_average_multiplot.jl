@@ -75,7 +75,7 @@ t = collect(range(0, T, Nₜ+1))
 t = OVec64(t, 0:Nₜ)
 U_det = IBVP_solution(t, κ₀, f_homogeneous, u₀_bent, pstore)
 U_det_fix = OMat64(zeros(dof.num_fixed, Nₜ+1), 1:dof.num_fixed, 0:Nₜ)
-
+Nₛ = dof.num_free + dof.num_fixed
 uh = [U_det[:,Nₜ]; U_det_fix[:,Nₜ]]
 L₀, _ = average_field(uh, "Omega", dof)
 L_det = fill(L₀, Nₛ)
