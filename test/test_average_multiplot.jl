@@ -79,8 +79,8 @@ Nₛ = dof.num_free + dof.num_fixed
 uh = [U_det[:,Nₜ]; U_det_fix[:,Nₜ]]
 L₀, _ = average_field(uh, "Omega", dof)
 M = 100
-L = zeros(Float64, M+1)
-L[1] = L₀
+L = zeros(Float64, M)
+#L[1] = L₀
 U_free = OffsetArray(zeros(dof.num_free, Nₜ+1, M), 1:dof.num_free, 0:Nₜ, 1:M)
 U_fix = OffsetArray(zeros(dof.num_fixed, Nₜ+1, M), 1:dof.num_fixed, 0:Nₜ, 1:M)
 Nₛ = dof.num_free + dof.num_fixed
@@ -98,13 +98,9 @@ for m = 1:M
                   solver, pcg_tol, pcg_maxiterations)
     U_free[:,:,m] = IBVP_solution(t, (x, y) -> κ_(x, y), f_homogeneous, u₀_bent, pstore)    
     uh = [ U_free[:, Nₜ, m]; U_fix[:, Nₜ, m] ]
-    L[m+1],_ = average_field(uh, "Omega", dof)
+    L[m],_ = average_field(uh, "Omega", dof)
 end
 
 figure(1)
-bar(1:M+1, L)
+hist(L)
 title("Histogram of all different values")
-xlabel("M")
-ylabel("L[m]")
-grid(true)
-show()
