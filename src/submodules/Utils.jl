@@ -22,21 +22,21 @@ function pcg!(x::Vector{T}, A::AbstractMatrix{T}, b::Vector{T}, P, tol::T,
     end
     w .= P \ r
     p .= w
-    for j = 1:n
+    for j = 0:n-1
         mul!(Ap, A, p) # Ap = A * p
         w_dot_r = dot(w, r)
         α = w_dot_r / dot(p, Ap)
         r .-= α * Ap
         x .+= α * p
         if norm(r) < tol * norm(b)
-            return j-1
+            return j
         end
         w .= P \ r
         β = dot(w, r) / w_dot_r
         p .= w + β * p
     end
     @warn "PCG failed to converge"
-    return j
+    return j+1
 end
 
 function cg!(x::Vector{T}, A::AbstractMatrix{T}, b::Vector{T}, tol::T,

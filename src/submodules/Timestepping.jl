@@ -185,7 +185,7 @@ function crank_nicolson_2D!(U::OMat64, M::AMat64, A::AMat64,
         mul!(rhs, A, U[1:Nₕ,n-1])
         rhs .= F - rhs
         scal!(τ, rhs) # rhs = τ F - τ A Uⁿ⁻¹
-#ldiv!(B, rhs) # rhs = ΔUⁿ
+        #ldiv!(B, rhs) # rhs = ΔUⁿ
         ΔUⁿ = R \ rhs
         U[1:Nₕ,n] .= U[1:Nₕ,n-1] .+ ΔUⁿ
     end

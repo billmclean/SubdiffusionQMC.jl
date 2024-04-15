@@ -9,7 +9,6 @@ using Printf
 using LinearAlgebra
 import LinearAlgebra: mul!, ldiv!, cholesky!, axpby!, cholesky
 import LinearAlgebra.BLAS: scal!
-
 #tol
 tol = 1e-7
 #exact solution and functions
@@ -40,10 +39,11 @@ end
 
 uh0 = get_nodal_values(u₀_homogeneous, dof) 
 T = 1.0
+#τ_values = [1e-5, 1e-4, 1e-3, 1e-2, 1e-1]
+#t = vcat(0.0, cumsum(τ_values))
 Nₜ = 50
-τ_values = [1e-5, 1e-4, 1e-3, 1e-2, 1e-1]
-t = vcat(0.0, cumsum(τ_values))
-t = OVec64(t, 0:lastindex(τ_values))
+t = collect(range(0, T, Nₜ+1))
+t = OVec64(t, 0:Nₜ)
 U_free = OMat64(zeros(dof.num_free, Nₜ+1), 1:dof.num_free, 0:Nₜ)
 Nₕ = lastindex(U_free, 1)
 F = Vec64(undef, Nₕ)
@@ -51,17 +51,18 @@ rhs = similar(F)
 wkspace = zeros(Nₕ, 4)
 U_free[:,0] = uh0[1:dof.num_free]
 ΔU = zeros(dof.num_free)
-residual_norm = zeros(Float64, lastindex(τ_values))
-error_norm_max = zeros(Float64, lastindex(τ_values))
-for τ in τ_values
-  for n = 1:lastindex(τ_values)
-    global U_vec  
-    B = M + (τ/2) * A
+residual_norm = zeros(Float64, Nₜ)
+error_norm_max = zeros(Float64, Nₜ)
+#for τ in τ_values
+  for n = 1:Nₜ
+    global U_free, ΔU, τ
+    τ = t[n] - t[n-1]
+    B = M + (τ/2) *A
     P = cholesky(B)
     midpoint = (t[n] + t[n-1]) / 2
     get_load_vector!(F, midpoint, f_homogeneous, dof)
     mul!(rhs, A, U_free[1:Nₕ,n-1])
-    scal!(τ, rhs) # rhs = τ F - τ A Uⁿ⁻¹
+    scal!(-τ, rhs) # rhs = τ F - τ A Uⁿ⁻¹
     fill!(ΔU, 0.0)
     start = time()
     num_its = SubdiffusionQMC.pcg!(ΔU, B, rhs, P, tol, wkspace)
@@ -76,15 +77,15 @@ for τ in τ_values
     max_n = maximum(abs, U_free[:,n] - u[1:dof.num_free])
     error_norm_max[n] = max(error_norm_max[n], max_n)
   end
-end
+#end
 
 figure(1)
 title("Residuals")
-semilogy(t[1:lastindex(τ_values)], residual_norm, label="Residual Norm")
+semilogy(t[1:Nₜ], residual_norm, label="Residual Norm")
 xlabel("t")
 grid(true)
 
 figure(2)
-plot(t[1:lastindex(τ_values)], error_norm_max, label="Error Maximum Norm")
+plot(t[1:Nₜ], error_norm_max, label="Error Maximum Norm")
 xlabel("t")
 grid(true)
