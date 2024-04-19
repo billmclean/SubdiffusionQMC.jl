@@ -29,14 +29,14 @@ function pcg!(x::Vector{T}, A::AbstractMatrix{T}, b::Vector{T}, P, tol::T,
         r .-= α * Ap
         x .+= α * p
         if norm(r) < tol * norm(b)
-            return j
+            return j + 1
         end
         w .= P \ r
         β = dot(w, r) / w_dot_r
         p .= w + β * p
     end
     @warn "PCG failed to converge"
-    return j+1
+    return n
 end
 
 function cg!(x::Vector{T}, A::AbstractMatrix{T}, b::Vector{T}, tol::T,
