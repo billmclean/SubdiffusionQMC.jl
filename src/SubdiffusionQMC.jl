@@ -9,7 +9,7 @@ export Vec64, OVec64, Mat64, OMat64
 export DiffusivityStore1D, DiffusivityStore2D, ExponentialSumStore, PDEStore 
 export double_indices, interpolate_κ!, slow_κ
 export graded_mesh, weights, weights!, exponential_sum
-export generalised_crank_nicolson!, crank_nicolson_1D!, crank_nicolson_2D!
+export generalised_crank_nicolson_1D!, generalised_crank_nicolson_2D!, crank_nicolson_1D!, crank_nicolson_2D!
 export pcg!, cg!
 
 const Vec64 = Vector{Float64} 
@@ -54,11 +54,15 @@ struct PDEStore
     dof::SimpleFiniteElements.DegreesOfFreedom
     b::Vec64
     solver::Symbol
+    #P::Vector{SparseCholeskyFactor}
     P::SparseCholeskyFactor
     wkspace::Mat64
     u::Vec64
+    #u_free_det::Vec64
+    #u_free::Vec64
     pcg_tol::Float64
     pcg_maxiterations::Integer
+    #bilinear_forms_M::Dict
 end
 
 function double_indices end
@@ -76,7 +80,8 @@ function weights! end
 function exponential_sum end
 include("submodules/FractionalDerivatives.jl")
 
-function generalised_crank_nicolson! end
+function generalised_crank_nicolson_1D! end
+function generalised_crank_nicolson_2D! end
 function crank_nicolson_1D! end
 function crank_nicolson_2D! end
 function weights end

@@ -1,7 +1,7 @@
 module Timestepping
 
 import ..Vec64, ..Mat64, ..OVec64, ..OMat64, ..AMat64, ..ExponentialSumStore
-import ..generalised_crank_nicolson!, 
+import ..generalised_crank_nicolson_1D!, ..generalised_crank_nicolson_2D!, 
        ..crank_nicolson_1D!, ..crank_nicolson_2D!,
        ..graded_mesh, ..weights
 import LinearAlgebra: SymTridiagonal, norm
@@ -30,7 +30,7 @@ The array dimensions are as follows.
     M[i,j]	for 1 ≤ i ≤ Nₕ-1, 1 ≤ j ≤ Nₕ-1,
     t[n]	for 0 ≤ n ≤ Nₜ.
 """
-function generalised_crank_nicolson!(U::OMat64, M::SymTridiagonal, 
+function generalised_crank_nicolson_1D!(U::OMat64, M::SymTridiagonal, 
 	                             A::SymTridiagonal, α::Float64, t::OVec64, 
 				     get_load_vector!::Function, parameters...)
     Nₜ = lastindex(t)
@@ -55,7 +55,7 @@ function generalised_crank_nicolson!(U::OMat64, M::SymTridiagonal,
     end
 end
 
-function generalised_crank_nicolson!(U::OMat64, M::SymTridiagonal, 
+function generalised_crank_nicolson_1D!(U::OMat64, M::SymTridiagonal, 
 	                             A::SymTridiagonal, 
 				     get_load_vector!::Function, 
 				     estore::ExponentialSumStore, parameters...)
@@ -103,6 +103,80 @@ function generalised_crank_nicolson!(U::OMat64, M::SymTridiagonal,
 	end
 	rhs .= rhs + M * Σ
 	U[1:Nₕ-1,n] = B \ rhs
+    end
+end
+
+function generalised_crank_nicolson_2D!(U::OMat64, M::AMat64, 
+	                             A::AMat64, α::Float64, t::OVec64, 
+				     get_load_vector!::Function, parameters...)
+    Nₜ = lastindex(t)
+    Nₕ = lastindex(U, 1)
+    ω = weights(α, t)
+    F = Vec64(undef, Nₕ)
+    rhs = similar(F)
+    Σ = similar(F)
+    for n = 1:Nₜ
+        τ = t[n] - t[n-1]
+	    B = ω[n][n] * M + (τ/2) * A
+	    midpoint = (t[n] + t[n-1]) / 2
+	    get_load_vector!(F, midpoint, parameters...)
+	    rhs .= τ .* F - (τ/2) .* (A * U[1:Nₕ,n-1])
+	    Σ .= ω[n][1] * U[1:Nₕ,0]
+	    for j = 1:n-1
+	        Σ .+= (ω[n][j+1] - ω[n][j]) .* U[1:Nₕ,j]
+	    end
+	    rhs .= rhs + M * Σ
+	    U[1:Nₕ,n] = B \ rhs
+    end
+end
+
+function generalised_crank_nicolson_2D!(U::OMat64, M::AMat64, 
+	                             A::AMat64, 
+				     get_load_vector!::Function, 
+				     estore::ExponentialSumStore, parameters...)
+    (;α, r, t, ω, S, a, w) = estore
+    Nₜ = lastindex(t)
+    Nₕ = lastindex(U, 1)
+    F = Vec64(undef, Nₕ)
+    rhs = similar(F)
+    Σ = similar(F)
+    for n = 1:r
+        τₙ = t[n] - t[n-1]
+	    B = ω[n][n] * M + (τₙ/2) * A
+	    midpoint = (t[n] + t[n-1]) / 2
+	    get_load_vector!(F, midpoint, parameters...)
+	    rhs .= τₙ .* F - (τₙ/2) .* (A * U[1:Nₕ,n-1])
+	    Σ .= ω[n][1] .* U[1:Nₕ,0]
+	    for j = 1:n-1
+	        Σ .+= (ω[n][j+1] - ω[n][j]) .* U[1:Nₕ,j]
+	    end
+	    rhs .= rhs + M * Σ
+	    U[1:Nₕ,n] = B \ rhs
+    end
+    fill!(S, 0.0)
+    for n = r+1:Nₜ
+        τₙ   = t[n] - t[n-1]
+	    τₙ₋₁ = t[n-1] - t[n-2]
+	    τₙ₋ᵣ = t[n-r] - t[n-r-1]
+	    B = ω[n][n] * M + (τₙ/2) * A
+	    midpoint = (t[n] + t[n-1]) / 2
+	    get_load_vector!(F, midpoint, parameters...)
+	    rhs .= τₙ .* F - (τₙ/2) .* (A * U[1:Nₕ,n-1])
+	    fill!(Σ, 0.0)
+	    for m = firstindex(a):lastindex(a)
+	        c = expm1(-a[m] * τₙ)
+	        μ = ( w[m] * exp(-a[m] * (t[n-1] - t[n-r])) * (c / a[m])
+		           * (expm1(-a[m] * τₙ₋ᵣ) / (a[m] * τₙ₋ᵣ)) )
+	        ν = -c / expm1(a[m] * τₙ₋₁)
+	        S[:,m] .= μ * (U[1:Nₕ,n-r] - U[1:Nₕ,n-r-1]) + ν * S[:,m]
+	        Σ .+= S[:,m]
+	    end
+	    Σ .= ω[n][n-r+1] * U[1:Nₕ,n-r] - (sinpi(α) / π) * Σ
+	    for j = n-r+1:n-1
+	        Σ .+= (ω[n][j+1] - ω[n][j]) .* U[1:Nₕ,j]
+	    end
+	    rhs .= rhs + M * Σ
+	    U[1:Nₕ,n] = B \ rhs
     end
 end
 
