@@ -8,18 +8,19 @@ using Printf
 import SimpleFiniteElements.Poisson: ∫∫a_∇u_dot_∇v!, ∫∫c_u_v!, ∫∫f_v!
 using LinearAlgebra
 import SpecialFunctions: erfcx
+
 solver = :direct
 path = joinpath("..", "spatial_domains", "unit_square.geo")
 gmodel = GeometryModel(path)
 essential_bcs = [("Gamma", 0.0)]
-h = 0.1
+h = 0.2
 mesh = FEMesh(gmodel, h)
 dof = DegreesOfFreedom(mesh, essential_bcs)
 pcg_tol, pcg_maxiterations = 1e-8, 100 #not used
 
 E_half(x) = erfcx(-x)
 
-fast_method = false
+fast_method = true
 
 if fast_method
     @printf("Using exponential sum approximation.\n")

@@ -7,10 +7,12 @@ using OffsetArrays
 
 export Vec64, OVec64, Mat64, OMat64
 export DiffusivityStore1D, DiffusivityStore2D, ExponentialSumStore, PDEStore 
+export PDEStore_integrand
 export double_indices, interpolate_κ!, slow_κ
 export graded_mesh, weights, weights!, exponential_sum
 export generalised_crank_nicolson_1D!, generalised_crank_nicolson_2D!, crank_nicolson_1D!, crank_nicolson_2D!
 export pcg!, cg!
+export integrand_init!, integrand!
 
 const Vec64 = Vector{Float64} 
 const OVec64 = OffsetVector{Float64}
@@ -54,15 +56,25 @@ struct PDEStore
     dof::SimpleFiniteElements.DegreesOfFreedom
     b::Vec64
     solver::Symbol
-    #P::Vector{SparseCholeskyFactor}
     P::SparseCholeskyFactor
     wkspace::Mat64
     u::Vec64
-    #u_free_det::Vec64
-    #u_free::Vec64
     pcg_tol::Float64
     pcg_maxiterations::Integer
-    #bilinear_forms_M::Dict
+end
+
+struct PDEStore_integrand
+    κ₀::Function
+    dof::SimpleFiniteElements.DegreesOfFreedom
+    b::Vec64
+    solver::Symbol
+    P::Vector{SparseCholeskyFactor}
+    wkspace::Mat64
+    u_free_det::Vec64
+    u_free::Vec64
+    pcg_tol::Float64
+    pcg_maxits::Int
+    bilinear_forms_M::Dict
 end
 
 function double_indices end
@@ -91,4 +103,7 @@ function pcg! end
 function cg! end
 include("submodules/Utils.jl")
 
+function integrand_init! end
+function integrand! end
+include("submodules/PDE.jl")
 end # module SubdiffusionQMC
