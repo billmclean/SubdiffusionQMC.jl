@@ -65,8 +65,8 @@ function ExponentialSumStore(t::OVec64, Nₕ::Integer, α::Float64, r::Integer,
 	a[m] /= t[Nₜ]
     end
 
-    #S = OMat64(undef, 1:Nₕ-1, -M₋:M₊)
-    S = OMat64(undef, 1:Nₕ, -M₋:M₊)
+    #S = OMat64(undef, 1:Nₕ-1, -M₋:M₊) #for 1D
+    S = OMat64(undef, 1:Nₕ, -M₋:M₊) #for 2D
     ExponentialSumStore(α, r, t, ω, S, a, w, δ, tol)
 end
 

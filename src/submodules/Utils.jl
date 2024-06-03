@@ -3,10 +3,26 @@ module Utils
 import ..Vec64, ..Mat64
 using ArgCheck
 using LinearAlgebra
+using JLD2
 
-import ..pcg!, ..cg!
+import ..SPOD_points, ..pcg!, ..cg!
 
-function pcg!(x::Vector{T}, A::AbstractMatrix{T}, b::Vector{T}, P, tol::T,
+function SPOD_points(s::Integer, path::String)
+    D = load(path)
+    if s > 256
+	error("Dimension s can be at most 256")
+    end
+    Nvals = D["Nvals"]
+    pts = Vector{Mat64}(undef, length(Nvals))
+    for k in eachindex(Nvals)
+	N = Nvals[k]
+        name = "SPOD_N$(N)_dim256"
+	pts[k] = D[name][1:s,:] .- 1/2
+    end
+    return Nvals, pts
+end
+
+function pcg!(x::AbstractVector{T}, A::AbstractMatrix{T}, b::Vector{T}, P, tol::T,
               wkspace::Matrix{T}) where T <: AbstractFloat
     n = lastindex(b)
     @argcheck size(A) == (n, n)

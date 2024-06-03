@@ -11,11 +11,13 @@ export PDEStore_integrand
 export double_indices, interpolate_κ!, slow_κ
 export graded_mesh, weights, weights!, exponential_sum
 export generalised_crank_nicolson_1D!, generalised_crank_nicolson_2D!, crank_nicolson_1D!, crank_nicolson_2D!
-export pcg!, cg!
+export SPOD_points, pcg!, cg!
 export integrand_init!, integrand!
+export simulations!
 
 const Vec64 = Vector{Float64} 
 const OVec64 = OffsetVector{Float64}
+const AVec64 = AbstractVector{Float64}
 const Mat64 = Matrix{Float64}
 const OMat64 = OffsetMatrix{Float64}
 const AMat64 = AbstractMatrix{Float64}
@@ -99,6 +101,7 @@ function crank_nicolson_2D! end
 function weights end
 include("submodules/Timestepping.jl")
 
+function SPOD_points end
 function pcg! end
 function cg! end
 include("submodules/Utils.jl")
@@ -106,4 +109,8 @@ include("submodules/Utils.jl")
 function integrand_init! end
 function integrand! end
 include("submodules/PDE.jl")
+
+function simulations! end
+include("submodules/QMC.jl")
+
 end # module SubdiffusionQMC

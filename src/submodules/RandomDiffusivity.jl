@@ -1,7 +1,7 @@
 module RandomDiffusivity
 
 import ..DiffusivityStore1D, ..DiffusivityStore2D, 
-       ..IdxPair, ..Vec64, ..Mat64, ..double_indices, ..interpolate_κ!,
+       ..IdxPair, ..Vec64, ..AVec64, ..Mat64, ..double_indices, ..interpolate_κ!,
        ..slow_κ
 import FFTW: plan_r2r, RODFT00, r2rFFTWPlan
 using Interpolations: cubic_spline_interpolation
@@ -61,7 +61,7 @@ function interpolate_κ!(y::Vec64, κ₀::Vec64, dstore::DiffusivityStore1D)
     cubic_spline_interpolation(x, vals)
 end
 
-function interpolate_κ!(y::Vec64, κ₀::Mat64, dstore::DiffusivityStore2D)
+function interpolate_κ!(y::AVec64, κ₀::Mat64, dstore::DiffusivityStore2D)
     (; idx, vals) = dstore
     @argcheck length(idx) == length(y)
     KL_expansion!(y, κ₀, dstore)
@@ -82,7 +82,7 @@ function slow_κ(x₁::Float64, x₂::Float64, y::Vec64, κ₀::Function,
     return κ₀(x₁, x₂) + Σ / Mₚ
 end
 
-function KL_expansion!(y::Vec64, κ₀::Vec64, dstore::DiffusivityStore1D)
+function KL_expansion!(y::AVec64, κ₀::Vec64, dstore::DiffusivityStore1D)
     (;p, Mₚ, coef, vals, plan) = dstore
     for j in eachindex(y)
 	coef[j] = y[j] / j^(1/p)
@@ -93,7 +93,7 @@ function KL_expansion!(y::Vec64, κ₀::Vec64, dstore::DiffusivityStore1D)
     end
 end
 
-function KL_expansion!(y::Vec64, κ₀::Mat64, dstore::DiffusivityStore2D)
+function KL_expansion!(y::AVec64, κ₀::Mat64, dstore::DiffusivityStore2D)
     (;idx, p, Mₚ, coef, vals, plan) = dstore
     fill!(coef, 0.0)
     for j in eachindex(idx)

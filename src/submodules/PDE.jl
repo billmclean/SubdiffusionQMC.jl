@@ -6,7 +6,7 @@ import LinearAlgebra: BLAS, cholesky
 import SimpleFiniteElements.Poisson: ∫∫a_∇u_dot_∇v!, ∫∫c_u_v!, ∫∫f_v!
 import ..PDEStore_integrand, ..DiffusivityStore2D, ..ExponentialSumStore, ..pcg!
 import ..generalised_crank_nicolson_2D!, ..weights
-import ..Vec64, ..Mat64, ..OMat64, ..OVec64, ..AMat64, ..SparseCholeskyFactor, ..IdxPair
+import ..Vec64, ..AVec64, ..Mat64, ..OMat64, ..OVec64, ..AMat64, ..SparseCholeskyFactor, ..IdxPair
 import ..interpolate_κ!
 import ..SparseCholeskyFactor
 
@@ -20,7 +20,6 @@ function PDEStore_integrand(κ₀::Function, dof::DegreesOfFreedom,
     wkspace = Mat64(undef, dof.num_free, 4)
     u_free = Vec64(undef, dof.num_free)
     u_free_det = Vec64(undef, dof.num_free)
-#    u_fix = Vec64(undef, dof.num_fixed)
     bilinear_forms_M = Dict("Omega" => (∫∫c_u_v!, 1.0))
     return PDEStore_integrand(κ₀, dof, b, solver, P,
                     wkspace, u_free_det, u_free, pcg_tol, pcg_maxits, bilinear_forms_M)
@@ -55,40 +54,12 @@ function deterministic_solve!(estore::ExponentialSumStore, pstore::PDEStore_inte
     M_free, _ = assemble_matrix(dof, bilinear_forms_M)
     num_free, num_fixed = dof.num_free, dof.num_fixed
     u_free_det = OMat64(zeros(num_free, Nₜ+1), 1:num_free, 0:Nₜ)
-    println("u_free_det initialized with size:", size(u_free_det))
     u_fix = OMat64(zeros(num_fixed, Nₜ+1), 1:num_fixed, 0:Nₜ)
-    println("u_fix initialized with size:", size(u_fix))
     u0h = get_nodal_values(u₀, dof)
     u_free_det[:,0] = u0h[1:num_free]
     generalised_crank_nicolson_2D!(u_free_det, M_free, A_free, 
                                      get_load_vector!, estore, pstore, f)
-    println("u_free_det size:", size(u_free_det))
-    println("u_fix size:", size(u_fix))
     uh_det = [u_free_det[:,Nₜ]; u_fix[:,Nₜ]]
-    println("uh_det size:", size(uh_det))
-
-    #check for NaN values in u_fix
-    if any(isnan.(u_fix))
-        println("NaN values found in u_fix:")
-        println(u_fix)
-    else
-        println("No NaN values found in u_fix.")
-    end
-    #check for NaN values in u_free_det
-    if any(isnan.(u_free_det))
-        println("NaN values found in u_free_det:")
-        println(u_free_det)
-    else
-        println("No NaN values found in u_free_det.")
-    end    
-    #check for NaN values in uh
-    if any(isnan.(uh_det))
-        println("NaN values found in uh_det:")
-        println(uh_det)
-    else
-        println("No NaN values found in uh_det.")
-    end
-
     Φ_det, _ = average_field(uh_det, "Omega", dof)
     return Φ_det
 end
@@ -102,45 +73,17 @@ function deterministic_solve!(α::Float64, t::OVec64, pstore::PDEStore_integrand
     M_free, _ = assemble_matrix(dof, bilinear_forms_M)
     num_free, num_fixed = dof.num_free, dof.num_fixed
     u_free_det = OMat64(zeros(num_free, Nₜ+1), 1:num_free, 0:Nₜ)
-    println("u_free_det initialized with size:", size(u_free_det))
     u_fix = OMat64(zeros(num_fixed, Nₜ+1), 1:num_fixed, 0:Nₜ)
-    println("u_fix initialized with size:", size(u_fix))
     u0h = get_nodal_values(u₀, dof)
     u_free_det[:,0] = u0h[1:num_free]
     generalised_crank_nicolson_2D!(u_free_det, M_free, A_free, α, t,
                                      get_load_vector!, pstore, f)
-    println("u_free_det size:", size(u_free_det))
-    println("u_fix size:", size(u_fix))
     uh_det = [u_free_det[:,Nₜ]; u_fix[:,Nₜ]]
-    println("uh_det size:", size(uh_det))
-
-    #check for NaN values in u_fix
-    if any(isnan.(u_fix))
-        println("NaN values found in u_fix:")
-        println(u_fix)
-    else
-        println("No NaN values found in u_fix.")
-    end
-    #check for NaN values in u_free_det
-    if any(isnan.(u_free_det))
-        println("NaN values found in u_free_det:")
-        println(u_free_det)
-    else
-        println("No NaN values found in u_free_det.")
-    end    
-    #check for NaN values in uh
-    if any(isnan.(uh_det))
-        println("NaN values found in uh_det:")
-        println(uh_det)
-    else
-        println("No NaN values found in uh_det.")
-    end
-
     Φ_det, _ = average_field(uh_det, "Omega", dof)
     return Φ_det
 end
 
-function integrand!(y_vals::Vec64, κ₀_vals::Mat64, estore::ExponentialSumStore, 
+function integrand!(y_vals::AVec64, κ₀_vals::Mat64, estore::ExponentialSumStore, 
                      pstore::PDEStore_integrand, dstore::DiffusivityStore2D, 
                      solver, f::Function, get_load_vector!::Function, u₀::Function)
     κ_ = interpolate_κ!(y_vals, κ₀_vals, dstore)
@@ -148,7 +91,7 @@ function integrand!(y_vals::Vec64, κ₀_vals::Mat64, estore::ExponentialSumStor
     random_solve!(solver, estore, pstore, bilinear_forms_A, get_load_vector!, f, u₀)
 end
 
-function integrand!(y_vals::Vec64, κ₀_vals::Mat64, α::Float64, t::OVec64,
+function integrand!(y_vals::AVec64, κ₀_vals::Mat64, α::Float64, t::OVec64,
                      pstore::PDEStore_integrand, dstore::DiffusivityStore2D, 
                      solver, f::Function, get_load_vector!::Function, u₀::Function)
     κ_ = interpolate_κ!(y_vals, κ₀_vals, dstore)
@@ -166,9 +109,7 @@ function random_solve!(solver, α::Float64, t::OVec64, pstore::PDEStore_integran
     num_free, num_fixed = dof.num_free, dof.num_fixed
     wkspace = Mat64(undef, num_free, 4)
     u_free = OMat64(zeros(num_free, Nₜ+1), 1:num_free, 0:Nₜ)
-    println("u_free initialized with size:", size(u_free))
     u_fix = OMat64(zeros(num_fixed, Nₜ+1), 1:num_fixed, 0:Nₜ)
-    println("u_fix initialized with size:", size(u_fix))
     u0h = get_nodal_values(u₀, dof)
     u_free[:,0] = u0h[1:dof.num_free]
     lo = floor(Int, log10(t[1]-t[0]))
@@ -180,33 +121,7 @@ function random_solve!(solver, α::Float64, t::OVec64, pstore::PDEStore_integran
         else solver == :pcg
         solve_pcg!(u_free, M_free, A_free, get_load_vector!, α, t, pstore, f, τ_values)
     end
-        println("u_free size:", size(u_free))
-        println("u_fix size:", size(u_fix))
-        uh = [u_free[:,Nₜ]; u_fix[:,Nₜ]]
-        println("uh size:", size(uh))
-    
-       #check for NaN values in u_fix
-       if any(isnan.(u_fix))
-        println("NaN values found in u_fix:")
-        println(u_fix)
-    else
-        println("No NaN values found in u_fix.")
-    end
-    #check for NaN values in u_free_det
-    if any(isnan.(u_free))
-        println("NaN values found in u_free:")
-        println(u_free)
-    else
-        println("No NaN values found in u_free.")
-    end    
-    #check for NaN values in uh
-    if any(isnan.(uh))
-        println("NaN values found in uh:")
-        println(uh)
-    else
-        println("No NaN values found in uh.")
-    end
-
+    uh = [u_free[:,Nₜ]; u_fix[:,Nₜ]]
     Φ, _ = average_field(uh, "Omega", dof)
     return Φ
 end
@@ -221,9 +136,7 @@ function random_solve!(solver, estore::ExponentialSumStore, pstore::PDEStore_int
     M_free, _ = assemble_matrix(dof, bilinear_forms_M)
     num_free, num_fixed = dof.num_free, dof.num_fixed
     u_free = OMat64(zeros(num_free, Nₜ+1), 1:num_free, 0:Nₜ)
-    println("u_free initialized with size:", size(u_free))
     u_fix = OMat64(zeros(num_fixed, Nₜ+1), 1:num_fixed, 0:Nₜ)
-    println("u_fix initialized with size:", size(u_fix))
     u0h = get_nodal_values(u₀, dof)
     u_free[:,0] = u0h[1:dof.num_free]
     lo = floor(Int, log10(t[1]-t[0]))
@@ -235,33 +148,7 @@ function random_solve!(solver, estore::ExponentialSumStore, pstore::PDEStore_int
         else solver == :pcg
         slove_expsum_pcg!(u_free, M_free, A_free, get_load_vector!, estore, pstore, f, τ_values)
     end
-        println("u_free size:", size(u_free))
-        println("u_fix size:", size(u_fix))
-        uh = [u_free[:,Nₜ]; u_fix[:,Nₜ]]
-        println("uh size:", size(uh))
-    
-       #check for NaN values in u_fix
-       if any(isnan.(u_fix))
-        println("NaN values found in u_fix:")
-        println(u_fix)
-    else
-        println("No NaN values found in u_fix.")
-    end
-    #check for NaN values in u_free_det
-    if any(isnan.(u_free))
-        println("NaN values found in u_free:")
-        println(u_free)
-    else
-        println("No NaN values found in u_free.")
-    end    
-    #check for NaN values in uh
-    if any(isnan.(uh))
-        println("NaN values found in uh:")
-        println(uh)
-    else
-        println("No NaN values found in uh.")
-    end
-
+    uh = [u_free[:,Nₜ]; u_fix[:,Nₜ]]
     Φ, _ = average_field(uh, "Omega", dof)
     return Φ
 end
