@@ -186,7 +186,6 @@ function solve_pcg!(U::OMat64, M::AMat64, A::AMat64, get_load_vector!::Function,
         v = view(U, 1:num_free, n)
         num_its[n] = pcg!(v, B, rhs, P[index_τ], pcg_tol, wkspace)
     end
-    return U
 end
 
 function slove_expsum_pcg!(U::OMat64, M::AMat64, A::AMat64, get_load_vector!::Function, 
