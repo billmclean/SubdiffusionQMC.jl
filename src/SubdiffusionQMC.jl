@@ -12,8 +12,8 @@ export double_indices, interpolate_κ!, slow_κ
 export graded_mesh, weights, weights!, exponential_sum
 export generalised_crank_nicolson_1D!, generalised_crank_nicolson_2D!, crank_nicolson_1D!, crank_nicolson_2D!
 export SPOD_points, pcg!, cg!
-export integrand_init!, integrand!
-export simulations!
+export integrand_init!, integrand!, slow_integrand!
+export simulations!, slow_simulations!
 
 const Vec64 = Vector{Float64} 
 const OVec64 = OffsetVector{Float64}
@@ -108,9 +108,11 @@ include("submodules/Utils.jl")
 
 function integrand_init! end
 function integrand! end
+function slow_integrand! end
 include("submodules/PDE.jl")
 
 function simulations! end
+function slow_simulations! end
 include("submodules/QMC.jl")
 
 end # module SubdiffusionQMC

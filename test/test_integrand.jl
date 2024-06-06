@@ -1,15 +1,8 @@
 using SubdiffusionQMC
 using SimpleFiniteElements
 import SimpleFiniteElements.Utils: gmsh2pyplot
-import SimpleFiniteElements.FEM: average_field, assemble_vector!
+import SimpleFiniteElements.FEM: assemble_vector!
 import SimpleFiniteElements.Poisson: ∫∫a_∇u_dot_∇v!, ∫∫c_u_v!, ∫∫f_v!
-using Printf
-import OffsetArrays: OffsetArray
-using PyPlot
-using LinearAlgebra
-import LinearAlgebra: mul!, ldiv!, cholesky!, axpby!, cholesky
-import LinearAlgebra.BLAS: scal!
-using Statistics
 
 path = joinpath("..", "spatial_domains", "unit_square.geo")
 gmodel = GeometryModel(path)
@@ -63,6 +56,11 @@ y_vals = rand(z) .- 1/2
 x₁_vals = range(0, 1, N₁)
 x₂_vals = range(0, 1, N₂)
 κ₀_vals = Float64[ κ₀(x, y) for x in x₁_vals, y in x₂_vals ]
+#integrand!(y_vals, κ₀_vals, α, t, pstore, dstore, solver, f_homogeneous, get_load_vector!, u₀_bent)
+integrand!(y_vals, κ₀_vals, estore, pstore, 
+           dstore, solver, f_homogeneous, get_load_vector!, u₀_bent)
 
-integrand!(y_vals, κ₀_vals, α, t, pstore, dstore, solver, f_homogeneous, get_load_vector!, u₀_bent)
-#integrand!(y_vals, κ₀_vals, estore, pstore, dstore, solver, f_homogeneous, get_load_vector!, u₀_bent)
+slow_integrand!(y_vals, κ₀, estore, pstore, 
+                dstore, solver, f_homogeneous, get_load_vector!, u₀_bent)
+
+ 

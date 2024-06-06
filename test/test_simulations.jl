@@ -55,4 +55,13 @@ x₂_vals = range(0, 1, N₂)
 
 qmc_path = joinpath("..", "qmc_points", "SPOD_dim256.jld2")
 Nvals, pts = SPOD_points(z, qmc_path)
-ϕ, ϕ_det = simulations!(pts[9], solver, κ₀_vals, f_homogeneous, get_load_vector!, pstore, estore, dstore, u₀_bent)
+
+use_fft = false
+
+if use_fft
+    ϕ, ϕ_det = simulations!(pts[9], solver, κ₀_vals, f_homogeneous, 
+                         get_load_vector!, pstore, estore, dstore, u₀_bent)
+else
+    ϕ, ϕ_det = slow_simulations!(pts[9], solver, κ₀, f_homogeneous, 
+                         get_load_vector!, pstore, estore, dstore, u₀_bent)
+end

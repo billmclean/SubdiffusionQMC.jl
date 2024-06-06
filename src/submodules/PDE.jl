@@ -7,10 +7,10 @@ import SimpleFiniteElements.Poisson: ∫∫a_∇u_dot_∇v!, ∫∫c_u_v!, ∫�
 import ..PDEStore_integrand, ..DiffusivityStore2D, ..ExponentialSumStore, ..pcg!
 import ..generalised_crank_nicolson_2D!, ..weights
 import ..Vec64, ..AVec64, ..Mat64, ..OMat64, ..OVec64, ..AMat64, ..SparseCholeskyFactor, ..IdxPair
-import ..interpolate_κ!
+import ..interpolate_κ!, ..slow_κ
 import ..SparseCholeskyFactor
 
-import ..integrand_init!, ..integrand!
+import ..integrand_init!, ..integrand!, ..slow_integrand!
 
 function PDEStore_integrand(κ₀::Function, dof::DegreesOfFreedom,
               solver, pcg_tol::Float64, pcg_maxits::Int)
@@ -246,6 +246,15 @@ function slove_expsum_pcg!(U::OMat64, M::AMat64, A::AMat64, get_load_vector!::Fu
         v = view(U, 1:num_free, n)
         num_its[n] = pcg!(v, B, rhs, P[index_τ], pcg_tol, wkspace)
     end
+end
+
+function slow_integrand!(y_vals::AVec64, κ₀::Function,
+                     estore::ExponentialSumStore, 
+                     pstore::PDEStore_integrand, dstore::DiffusivityStore2D, 
+                     solver, f::Function, get_load_vector!::Function, u₀::Function)
+    slow_κ_(x₁, x₂) = slow_κ( x₁, x₂, y_vals, κ₀, dstore)
+    bilinear_forms_A = Dict("Omega" => (∫∫a_∇u_dot_∇v!, slow_κ_))
+    random_solve!(solver, estore, pstore, bilinear_forms_A, get_load_vector!, f, u₀)
 end
 
 end #module

@@ -71,7 +71,7 @@ function interpolate_κ!(y::AVec64, κ₀::Mat64, dstore::DiffusivityStore2D)
     cubic_spline_interpolation((x₁, x₂), vals)
 end
 
-function slow_κ(x₁::Float64, x₂::Float64, y::Vec64, κ₀::Function,
+function slow_κ(x₁::Float64, x₂::Float64, y::AVec64, κ₀::Function,
 	dstore::DiffusivityStore2D)
     (; idx, p, Mₚ) = dstore
     Σ = 0.0
