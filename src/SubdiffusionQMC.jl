@@ -10,7 +10,8 @@ export DiffusivityStore1D, DiffusivityStore2D, ExponentialSumStore, PDEStore
 export PDEStore_integrand
 export double_indices, interpolate_κ!, slow_κ
 export graded_mesh, weights, weights!, exponential_sum
-export generalised_crank_nicolson_1D!, generalised_crank_nicolson_2D!, crank_nicolson_1D!, crank_nicolson_2D!
+export generalised_crank_nicolson_1D!, generalised_crank_nicolson_2D!, 
+       crank_nicolson_1D!, crank_nicolson_2D!
 export SPOD_points, pcg!, cg!
 export integrand_init!, integrand!, slow_integrand!
 export simulations!, slow_simulations!

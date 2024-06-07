@@ -6,7 +6,8 @@ import LinearAlgebra: BLAS, cholesky
 import SimpleFiniteElements.Poisson: ∫∫a_∇u_dot_∇v!, ∫∫c_u_v!, ∫∫f_v!
 import ..PDEStore_integrand, ..DiffusivityStore2D, ..ExponentialSumStore, ..pcg!
 import ..generalised_crank_nicolson_2D!, ..weights
-import ..Vec64, ..AVec64, ..Mat64, ..OMat64, ..OVec64, ..AMat64, ..SparseCholeskyFactor, ..IdxPair
+import ..Vec64, ..AVec64, ..Mat64, ..OMat64, ..OVec64, 
+       ..AMat64, ..SparseCholeskyFactor, ..IdxPair
 import ..interpolate_κ!, ..slow_κ
 import ..SparseCholeskyFactor
 
