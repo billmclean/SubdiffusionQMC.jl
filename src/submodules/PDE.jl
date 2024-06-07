@@ -115,15 +115,17 @@ function random_solve!(solver, α::Float64, t::OVec64, pstore::PDEStore_integran
     lo = floor(Int, log10(t[1]-t[0]))
     hi = ceil(Int, log10(t[end] - t[end-1]))
     τ_values = generate_τ_values(lo, hi)
+    num_its = Vec64(zeros(Nₜ))
     if solver == :direct
         generalised_crank_nicolson_2D!(u_free, M_free, A_free, α, t, 
                                                  get_load_vector!, pstore, f)
         else solver == :pcg
-        solve_pcg!(u_free, M_free, A_free, get_load_vector!, α, t, pstore, f, τ_values)
+        num_its = solve_pcg!(u_free, M_free, A_free,
+                             get_load_vector!, α, t, pstore, f, τ_values)
     end
     uh = [u_free[:,Nₜ]; u_fix[:,Nₜ]]
     Φ, _ = average_field(uh, "Omega", dof)
-    return Φ
+    return Φ, num_its
 end
 
 function random_solve!(solver, estore::ExponentialSumStore, pstore::PDEStore_integrand, 
@@ -142,15 +144,17 @@ function random_solve!(solver, estore::ExponentialSumStore, pstore::PDEStore_int
     lo = floor(Int, log10(t[1]-t[0]))
     hi = ceil(Int, log10(t[end] - t[end-1]))
     τ_values = generate_τ_values(lo, hi)
+    num_its = Vec64(zeros(Nₜ))
     if solver == :direct
         generalised_crank_nicolson_2D!(u_free, M_free, A_free, 
                                                  get_load_vector!, estore, pstore, f)
         else solver == :pcg
-        slove_expsum_pcg!(u_free, M_free, A_free, get_load_vector!, estore, pstore, f, τ_values)
+        num_its = slove_expsum_pcg!(u_free, M_free, A_free, get_load_vector!,
+                                     estore, pstore, f, τ_values)
     end
     uh = [u_free[:,Nₜ]; u_fix[:,Nₜ]]
     Φ, _ = average_field(uh, "Omega", dof)
-    return Φ
+    return Φ, num_its
 end
 
 function solve_pcg!(U::OMat64, M::AMat64, A::AMat64, get_load_vector!::Function, 
@@ -178,14 +182,13 @@ function solve_pcg!(U::OMat64, M::AMat64, A::AMat64, get_load_vector!::Function,
         rhs .= τ .* F - (τ/2) .* (A * U[1:num_free,n-1])
         Σ .= ω[n][1] * U[1:num_free, 0]
         for j = 1:n-1
-            if j + 1 <= length(ω[n])
-                Σ .+= (ω[n][j+1] - ω[n][j]) .* U[1:num_free, j]
-            end
+            Σ .+= (ω[n][j+1] - ω[n][j]) .* U[1:num_free, j]
         end
         rhs .= rhs + M * Σ 
         v = view(U, 1:num_free, n)
         num_its[n] = pcg!(v, B, rhs, P[index_τ], pcg_tol, wkspace)
     end
+    return num_its
 end
 
 function slove_expsum_pcg!(U::OMat64, M::AMat64, A::AMat64, get_load_vector!::Function, 
@@ -246,6 +249,7 @@ function slove_expsum_pcg!(U::OMat64, M::AMat64, A::AMat64, get_load_vector!::Fu
         v = view(U, 1:num_free, n)
         num_its[n] = pcg!(v, B, rhs, P[index_τ], pcg_tol, wkspace)
     end
+    return num_its
 end
 
 function slow_integrand!(y_vals::AVec64, κ₀::Function,

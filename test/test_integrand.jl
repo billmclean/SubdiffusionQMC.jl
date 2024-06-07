@@ -3,6 +3,7 @@ using SimpleFiniteElements
 import SimpleFiniteElements.Utils: gmsh2pyplot
 import SimpleFiniteElements.FEM: assemble_vector!
 import SimpleFiniteElements.Poisson: ∫∫a_∇u_dot_∇v!, ∫∫c_u_v!, ∫∫f_v!
+using Statistics
 
 path = joinpath("..", "spatial_domains", "unit_square.geo")
 gmodel = GeometryModel(path)
@@ -49,18 +50,18 @@ function get_load_vector!(F::Vec64, t::Float64, pstore::PDEStore_integrand, f::F
 end
 
 #integrand_init!(α, t, pstore, f_homogeneous, get_load_vector!, u₀_bent)
-integrand_init!(estore, pstore, f_homogeneous, get_load_vector!, u₀_bent)
+ϕ_det = integrand_init!(estore, pstore, f_homogeneous, get_load_vector!, u₀_bent)
 
 y_vals = rand(z) .- 1/2
 (N₁, N₂) = resolution
 x₁_vals = range(0, 1, N₁)
 x₂_vals = range(0, 1, N₂)
 κ₀_vals = Float64[ κ₀(x, y) for x in x₁_vals, y in x₂_vals ]
-#integrand!(y_vals, κ₀_vals, α, t, pstore, dstore, solver, f_homogeneous, get_load_vector!, u₀_bent)
-integrand!(y_vals, κ₀_vals, estore, pstore, 
+#ϕ, num_its = integrand!(y_vals, κ₀_vals, α, t, pstore, dstore, solver, f_homogeneous, get_load_vector!, u₀_bent)
+ϕ_fast, num_its_fast = integrand!(y_vals, κ₀_vals, estore, pstore, 
            dstore, solver, f_homogeneous, get_load_vector!, u₀_bent)
 
-slow_integrand!(y_vals, κ₀, estore, pstore, 
+ϕ_slow, num_its_slow = slow_integrand!(y_vals, κ₀, estore, pstore, 
                 dstore, solver, f_homogeneous, get_load_vector!, u₀_bent)
 
  

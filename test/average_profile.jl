@@ -10,3 +10,8 @@ using LinearAlgebra
 import LinearAlgebra: mul!, ldiv!, cholesky!, axpby!, cholesky
 import LinearAlgebra.BLAS: scal!
 using Statistics
+import SubdiffusionQMC: SparseCholeskyFactor
+import SubdiffusionQMC.PDE: solve_pcg!
+path = joinpath("..", "spatial_domains", "unit_square.geo")
+gmodel = GeometryModel(path)
+essential_bcs = [("Gamma", 0.0)]
