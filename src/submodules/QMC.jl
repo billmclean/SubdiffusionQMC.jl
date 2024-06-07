@@ -19,6 +19,8 @@ function simulations!(pts::Mat64, solver, κ₀_vals::Mat64, f::Function,
     s, N = size(pts)
     chunks = collect(Iterators.partition(1:N, N ÷ Threads.nthreads()))
     Φ = zeros(N)
+    Nₜ = length(estore.t)
+    pcg_its = Mat64(zeros(Nₜ-1, N))
     Threads.@threads for chunk in chunks
 #    for chunk in chunks
     pstore_local = deepcopy(pstore)
@@ -27,13 +29,13 @@ function simulations!(pts::Mat64, solver, κ₀_vals::Mat64, f::Function,
     for l in chunk
 #    for l in 1:N
         y_vals = view(pts, :, l)
-        Φ[l] = integrand!(y_vals, κ₀_vals, 
+        Φ[l], pcg_its[:,l] = integrand!(y_vals, κ₀_vals, 
                           estore_local, pstore_local, dstore_local, solver, 
                           f, get_load_vector!, u₀)
     end
     end
     BLAS.set_num_threads(blas_threads)
-    return Φ, Φ_det
+    return Φ, Φ_det, pcg_its
 end
 
 function slow_simulations!(pts::Mat64, solver, κ₀::Function, f::Function, 
@@ -46,6 +48,8 @@ function slow_simulations!(pts::Mat64, solver, κ₀::Function, f::Function,
     s, N = size(pts)
     chunks = collect(Iterators.partition(1:N, N ÷ Threads.nthreads()))
     Φ = zeros(N)
+    Nₜ = length(estore.t)
+    pcg_its = Mat64(zeros(Nₜ-1, N))
     Threads.@threads for chunk in chunks
 #    for chunk in chunks
 	pstore_local = deepcopy(pstore)
@@ -54,13 +58,13 @@ function slow_simulations!(pts::Mat64, solver, κ₀::Function, f::Function,
 	for l in chunk
 #    for l in 1:N
 	    y_vals = view(pts, :, l)
-	    Φ[l] = slow_integrand!(y_vals, κ₀, estore_local, pstore_local, 
+	    Φ[l], pcg_its[:, l] = slow_integrand!(y_vals, κ₀, estore_local, pstore_local, 
                                dstore_local, solver, f, 
                                get_load_vector!, u₀)
 	end
     end
     BLAS.set_num_threads(blas_threads)
-    return Φ, Φ_det
+    return Φ, Φ_det, pcg_its
 end
 
 end #module
