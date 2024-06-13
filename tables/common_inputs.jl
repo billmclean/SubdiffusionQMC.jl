@@ -78,7 +78,6 @@ Example $exno.  Solving IBVP with non-conforming finite elements.
 Solver is $solver with tol = $pcg_tol.
 Employing $(Threads.nthreads()) threads.
 SPOD QMC points with z = $z.
-Constructing a family of $ngrids FEM meshes by uniform refinement.
 Finest FEM mesh has $num_free degrees of freedom and h = $h_string."""
 
 println(msg1)
