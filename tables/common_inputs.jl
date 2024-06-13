@@ -113,16 +113,16 @@ function create_tables(exno::Int64; nrows=4)
 	    Φ, Φ_det, pcg_its = simulations!(
                  pts[ref_row], solver, κ₀_vals, f_homogeneous, 
                  get_load_vector!, pstore, estore, dstore, u₀_bent)
-	elseif exno == 3
-	    if use_fft
-	    Φ, Φ_det, pcg_its = simulations!(
+	    elseif exno == 3
+	      if use_fft
+	        Φ, Φ_det, pcg_its = simulations!(
                  pts[ref_row], solver, κ₀_vals, f_homogeneous, 
                  get_load_vector!, pstore, estore, dstore, u₀_bent)
-	    else
-	    Φ, Φ_det, pcg_its = slow_simulations!(
+	      else
+	        Φ, Φ_det, pcg_its = slow_simulations!(
                  pts[ref_row], solver, κ₀, f_homogeneous, 
                  get_load_vector!, pstore, estore, dstore, u₀_bent)
-	    end
+	      end
         end
         elapsed_ref = time() - start
         @printf(" in %d seconds.\n", elapsed_ref)
