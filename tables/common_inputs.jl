@@ -44,7 +44,7 @@ pstore = PDEStore_integrand(κ₀, dof, solver, pcg_tol, pcg_maxits)
 x, y, triangles = gmsh2pyplot(dof)
 num_free = pstore.dof.num_free
 
-u₀_bent(x, y) = 5 * (x^2 * (1 - x) + y^2 * (1 - y))
+u₀_bent(x, y) = 5 * (x^2 * (1 - x) * y^2 * (1 - y))
 
 r = 2
 tol = 1e-8
