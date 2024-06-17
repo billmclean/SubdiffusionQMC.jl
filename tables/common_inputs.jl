@@ -9,13 +9,13 @@ using JLD2
 path = joinpath("..", "spatial_domains", "unit_square.geo")
 gmodel = GeometryModel(path)
 
-hmax = 0.2
+hmax = 0.02
 
 solver = :pcg  # :direct or :pcg
 pcg_tol = 1e-10
 pcg_maxits = 100
 
-mesh = FEMesh(gmodel, hmax)
+mesh = FEMesh(gmodel, hmax; save_msh_file=false)
 essential_bcs = [("Gamma", 0.0)]
 dof = DegreesOfFreedom(mesh, essential_bcs)
 
@@ -32,7 +32,7 @@ else
 end
 
 T = 1.0
-Nₜ = 20
+Nₜ = 150
 α = 0.5
 γ = 2 / α
 t = graded_mesh(Nₜ, γ, T)
@@ -44,7 +44,7 @@ pstore = PDEStore_integrand(κ₀, dof, solver, pcg_tol, pcg_maxits)
 x, y, triangles = gmsh2pyplot(dof)
 num_free = pstore.dof.num_free
 
-u₀_bent(x, y) = 5 * (x^2 * (1 - x) * y^2 * (1 - y))
+u₀_bent(x, y) = 144 * (x^2 * (1 - x) * y^2 * (1 - y))
 
 r = 2
 tol = 1e-8
@@ -75,10 +75,12 @@ x₂_vals = range(0, 1, N₂)
 
 msg1 = """
 Example $exno.  Solving IBVP with non-conforming finite elements.
+Fractional time derivative of order α = $α.
 Solver is $solver with tol = $pcg_tol.
 Employing $(Threads.nthreads()) threads.
 SPOD QMC points with z = $z.
-Finest FEM mesh has $num_free degrees of freedom and h = $h_string."""
+Finest FEM mesh has $num_free degrees of freedom and h = $h_string.
+Using Nₜ = $Nₜ time steps with mesh grading parameter γ = $γ."""
 
 println(msg1)
 
