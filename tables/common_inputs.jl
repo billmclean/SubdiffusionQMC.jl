@@ -114,16 +114,16 @@ function create_tables(exno::Int64; nrows=4)
 	    Φ, Φ_det, pcg_its = simulations!(
                  pts[ref_row], solver, κ₀_vals, f_homogeneous, 
                  get_load_vector!, pstore, estore, dstore, u₀_bent)
-	    elseif exno == 3
-	      if use_fft
+	elseif exno == 3
+	    if use_fft
 	        Φ, Φ_det, pcg_its = simulations!(
                  pts[ref_row], solver, κ₀_vals, f_homogeneous, 
                  get_load_vector!, pstore, estore, dstore, u₀_bent)
-	      else
+	    else
 	        Φ, Φ_det, pcg_its = slow_simulations!(
                  pts[ref_row], solver, κ₀, f_homogeneous, 
                  get_load_vector!, pstore, estore, dstore, u₀_bent)
-	      end
+	    end
         end
         elapsed_ref = time() - start
         @printf(" in %d seconds.\n", elapsed_ref)
@@ -140,14 +140,16 @@ function create_tables(exno::Int64; nrows=4)
         start = time()
         if exno == 2
 	    Φ, _, _ = simulations!(pts[k], solver, κ₀_vals, f_homogeneous, 
-                                 get_load_vector!, pstore, estore, dstore, u₀_bent)
+                                   get_load_vector!, pstore, estore, dstore, 
+                                   u₀_bent)
 	elseif exno == 3
 	    if use_fft
 	        Φ, _, _ = simulations!(pts[k], solver, κ₀_vals, f_homogeneous, 
-                                     get_load_vector!, pstore, estore, dstore, u₀_bent)
+                                       get_load_vector!, pstore, estore, dstore,                                       u₀_bent)
 	    else
 	        Φ, _, _ = slow_simulations!(pts[k], solver, κ₀, f_homogeneous, 
-                                         get_load_vector!, pstore, estore, dstore, u₀_bent)
+                                         get_load_vector!, pstore, estore, 
+                                         dstore, u₀_bent)
 	    end
         end
         elapsed[k] = time() - start

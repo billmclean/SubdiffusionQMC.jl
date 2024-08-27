@@ -1,5 +1,6 @@
 module QMC
 
+using OffsetArrays
 import ..DiffusivityStore1D, ..DiffusivityStore2D, ..ExponentialSumStore, 
        ..IdxPair, ..Vec64, ..Mat64, ..double_indices, ..interpolate_κ!, ..AVec64,
        ..slow_κ
@@ -18,21 +19,22 @@ function simulations!(pts::Mat64, solver, κ₀_vals::Mat64, f::Function,
     BLAS.set_num_threads(1)
     s, N = size(pts)
     chunks = collect(Iterators.partition(1:N, N ÷ Threads.nthreads()))
-    Φ = zeros(N)
-    Nₜ = length(estore.t)
-    pcg_its = Mat64(zeros(Nₜ-1, N))
+    dof = pstore.dof
+    Nₜ = lastindex(estore.t)
+    Φ = OffsetMatrix(zeros(Nₜ+1, N), 0:Nₜ, 1:N)
+    pcg_its = Mat64(zeros(Nₜ, N))
     Threads.@threads for chunk in chunks
 #    for chunk in chunks
-    pstore_local = deepcopy(pstore)
-    dstore_local = deepcopy(dstore)
-    estore_local = deepcopy(estore)
-    for l in chunk
+        pstore_local = deepcopy(pstore)
+        dstore_local = deepcopy(dstore)
+        estore_local = deepcopy(estore)
+        for l in chunk
 #    for l in 1:N
-        y_vals = view(pts, :, l)
-        Φ[l], pcg_its[:,l] = integrand!(y_vals, κ₀_vals, 
-                          estore_local, pstore_local, dstore_local, solver, 
-                          f, get_load_vector!, u₀)
-    end
+            y_vals = view(pts, :, l)
+            Φ[:,l], pcg_its[:,l] = integrand!(y_vals, κ₀_vals, estore_local, 
+                                              pstore_local, dstore_local, 
+                                              solver, f, get_load_vector!, u₀)
+        end
     end
     BLAS.set_num_threads(blas_threads)
     return Φ, Φ_det, pcg_its

@@ -1,6 +1,7 @@
 module PDE
 
 using SimpleFiniteElements
+using OffsetArrays
 import SimpleFiniteElements.FEM: average_field, assemble_vector!
 import LinearAlgebra: BLAS, cholesky
 import SimpleFiniteElements.Poisson: ∫∫a_∇u_dot_∇v!, ∫∫c_u_v!, ∫∫f_v!
@@ -26,8 +27,9 @@ function PDEStore_integrand(κ₀::Function, dof::DegreesOfFreedom,
                     wkspace, u_free_det, u_free, pcg_tol, pcg_maxits, bilinear_forms_M)
 end
 
-function integrand_init!(estore::ExponentialSumStore, pstore::PDEStore_integrand, 
-                          f::Function, get_load_vector!::Function, u₀::Function)
+function integrand_init!(estore::ExponentialSumStore, 
+                         pstore::PDEStore_integrand, 
+                         f::Function, get_load_vector!::Function, u₀::Function)
     κ₀ = pstore.κ₀
     bilinear_forms_A = Dict("Omega" => (∫∫a_∇u_dot_∇v!, κ₀))
     deterministic_solve!(estore, pstore, bilinear_forms_A, get_load_vector!, f, u₀)
@@ -45,9 +47,11 @@ function generate_τ_values(lo, hi)
     return τ_values
 end
 
-function deterministic_solve!(estore::ExponentialSumStore, pstore::PDEStore_integrand, 
+function deterministic_solve!(estore::ExponentialSumStore, 
+                              pstore::PDEStore_integrand, 
                               bilinear_forms_A::Dict,
-                              get_load_vector!::Function, f::Function, u₀::Function)
+                              get_load_vector!::Function, f::Function, 
+                              u₀::Function)
     (; κ₀, dof, P, wkspace, pcg_tol, bilinear_forms_M) = pstore
     (;t, ω) = estore
     Nₜ = lastindex(t)
@@ -55,13 +59,16 @@ function deterministic_solve!(estore::ExponentialSumStore, pstore::PDEStore_inte
     M_free, _ = assemble_matrix(dof, bilinear_forms_M)
     num_free, num_fixed = dof.num_free, dof.num_fixed
     u_free_det = OMat64(zeros(num_free, Nₜ+1), 1:num_free, 0:Nₜ)
-    u_fix = OMat64(zeros(num_fixed, Nₜ+1), 1:num_fixed, 0:Nₜ)
     u0h = get_nodal_values(u₀, dof)
     u_free_det[:,0] = u0h[1:num_free]
     generalised_crank_nicolson_2D!(u_free_det, M_free, A_free, 
                                      get_load_vector!, estore, pstore, f)
-    uh_det = [u_free_det[:,Nₜ]; u_fix[:,Nₜ]]
-    Φ_det, _ = average_field(uh_det, "Omega", dof)
+    Φ_det = OffsetVector(zeros(Nₜ+1), 0:Nₜ)
+    uh_det = zeros(num_free+num_fixed)
+    for n = 0:Nₜ
+        uh_det[1:num_free] .= u_free_det[:,n]
+        Φ_det[n], _ = average_field(uh_det, "Omega", dof)
+    end
     return Φ_det
 end
 
@@ -84,25 +91,29 @@ function deterministic_solve!(α::Float64, t::OVec64, pstore::PDEStore_integrand
     return Φ_det
 end
 
-function integrand!(y_vals::AVec64, κ₀_vals::Mat64, estore::ExponentialSumStore, 
-                     pstore::PDEStore_integrand, dstore::DiffusivityStore2D, 
-                     solver, f::Function, get_load_vector!::Function, u₀::Function)
+function integrand!(y_vals::AVec64, κ₀_vals::Mat64, estore::ExponentialSumStore,
+                    pstore::PDEStore_integrand, dstore::DiffusivityStore2D, 
+                    solver, f::Function, get_load_vector!::Function, 
+                    u₀::Function)
     κ_ = interpolate_κ!(y_vals, κ₀_vals, dstore)
     bilinear_forms_A = Dict("Omega" => (∫∫a_∇u_dot_∇v!, (x, y) -> κ_(x, y)))
-    random_solve!(solver, estore, pstore, bilinear_forms_A, get_load_vector!, f, u₀)
+    random_solve!(solver, estore, pstore, bilinear_forms_A, 
+                  get_load_vector!, f, u₀)
 end
 
 function integrand!(y_vals::AVec64, κ₀_vals::Mat64, α::Float64, t::OVec64,
-                     pstore::PDEStore_integrand, dstore::DiffusivityStore2D, 
-                     solver, f::Function, get_load_vector!::Function, u₀::Function)
+                    pstore::PDEStore_integrand, dstore::DiffusivityStore2D, 
+                    solver, f::Function, get_load_vector!::Function, 
+                    u₀::Function)
     κ_ = interpolate_κ!(y_vals, κ₀_vals, dstore)
     bilinear_forms_A = Dict("Omega" => (∫∫a_∇u_dot_∇v!, (x, y) -> κ_(x, y)))
-    random_solve!(solver, α, t, pstore, bilinear_forms_A, get_load_vector!, f, u₀)
+    random_solve!(solver, α, t, pstore, bilinear_forms_A, 
+                  get_load_vector!, f, u₀)
 end
 
-function random_solve!(solver, α::Float64, t::OVec64, pstore::PDEStore_integrand, 
-                        bilinear_forms_A::Dict, 
-                        get_load_vector!::Function, f::Function, u₀::Function)
+function random_solve!(solver, α::Float64, t::OVec64, 
+                       pstore::PDEStore_integrand, bilinear_forms_A::Dict, 
+                       get_load_vector!::Function, f::Function, u₀::Function)
     (; κ₀, dof, P, wkspace, pcg_tol, bilinear_forms_M) = pstore
     Nₜ = lastindex(t)
     A_free, _ = assemble_matrix(dof, bilinear_forms_A)
@@ -110,7 +121,6 @@ function random_solve!(solver, α::Float64, t::OVec64, pstore::PDEStore_integran
     num_free, num_fixed = dof.num_free, dof.num_fixed
     wkspace = Mat64(undef, num_free, 4)
     u_free = OMat64(zeros(num_free, Nₜ+1), 1:num_free, 0:Nₜ)
-    u_fix = OMat64(zeros(num_fixed, Nₜ+1), 1:num_fixed, 0:Nₜ)
     u0h = get_nodal_values(u₀, dof)
     u_free[:,0] = u0h[1:dof.num_free]
     lo = floor(Int, log10(t[1]-t[0]))
@@ -124,8 +134,12 @@ function random_solve!(solver, α::Float64, t::OVec64, pstore::PDEStore_integran
         num_its = solve_pcg!(u_free, M_free, A_free,
                              get_load_vector!, α, t, pstore, f, τ_values)
     end
-    uh = [u_free[:,Nₜ]; u_fix[:,Nₜ]]
-    Φ, _ = average_field(uh, "Omega", dof)
+    Φ = zeros(Nₜ)
+    uh = zeros(num_free+num_fixed)
+    for n = 0:Nₜ
+        uh[1:num_free] .= u_free[:,n]
+        Φ[n], _ = average_field(uh, "Omega", dof)
+    end
     return Φ, num_its
 end
 
@@ -153,8 +167,12 @@ function random_solve!(solver, estore::ExponentialSumStore, pstore::PDEStore_int
         num_its = slove_expsum_pcg!(u_free, M_free, A_free, get_load_vector!,
                                      estore, pstore, f, τ_values)
     end
-    uh = [u_free[:,Nₜ]; u_fix[:,Nₜ]]
-    Φ, _ = average_field(uh, "Omega", dof)
+    Φ = OffsetVector(zeros(Nₜ+1), 0:Nₜ)
+    uh = zeros(num_free+num_fixed)
+    for n = 0:Nₜ
+        uh[1:num_free] .= u_free[:,n]
+        Φ[n], _ = average_field(uh, "Omega", dof)
+    end
     return Φ, num_its
 end
 

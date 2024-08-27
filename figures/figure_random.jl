@@ -94,7 +94,8 @@ end
 uh = [u_free[:,Nₜ]; u_fix[:,Nₜ]]
 
 figure(3)
-tripcolor(x, y, triangles, uh, shading="gouraud")
+#tripcolor(x, y, triangles, uh, shading="gouraud")
+tricontourf(x, y, triangles, uh, shading="gouraud")
 colorbar()
 title("Numerical Solution at t = $T when f ≡ 0")
 xlabel(L"$x$")
