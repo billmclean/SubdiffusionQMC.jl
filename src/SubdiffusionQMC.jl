@@ -12,7 +12,7 @@ export double_indices, interpolate_κ!, slow_κ
 export graded_mesh, weights, weights!, exponential_sum
 export generalised_crank_nicolson_1D!, generalised_crank_nicolson_2D!, 
        crank_nicolson_1D!, crank_nicolson_2D!
-export SPOD_points, pcg!, cg!
+export SPOD_points, pcg!, cg!, L2_norm
 export integrand_init!, integrand!, slow_integrand!
 export simulations!, slow_simulations!
 
@@ -105,6 +105,7 @@ include("submodules/Timestepping.jl")
 function SPOD_points end
 function pcg! end
 function cg! end
+function L2_norm end
 include("submodules/Utils.jl")
 
 function integrand_init! end

@@ -1,9 +1,10 @@
 module Utils
 
-import ..Vec64, ..Mat64
+import ..Vec64, ..Mat64, ..L2_norm
 using ArgCheck
 using LinearAlgebra
 using JLD2
+using OffsetArrays
 
 import ..SPOD_points, ..pcg!, ..cg!
 
@@ -84,6 +85,22 @@ function cg!(x::Vector{T}, A::AbstractMatrix{T}, b::Vector{T}, tol::T,
     end
     @warn "CG failed to converge"
     return  j+1
+end
+
+"""
+    L2_norm(g, t)
+
+Returns the L2-norm of the continuous, piecewise-linear function taking the
+value `g[n]` at `t[n]`.
+"""
+function L2_norm(g::OffsetVector{Float64}, t::OffsetVector{Float64})
+    s = 0.0
+    N = lastindex(t)
+    for n = 1:N
+        τₙ = t[n] - t[n-1]
+        s += (g[n]^2 + g[n]*g[n-1] + g[n-1]^2) * τₙ
+    end
+    return sqrt(s/3)
 end
 
 end # module
