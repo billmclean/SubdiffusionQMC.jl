@@ -6,8 +6,8 @@ include("input_data.jl")
 nrows = 4
 ref_row = nrows + 2
 
-#for row = 1:ref_row
-for row = [6]
+for row = 1:ref_row
+    local N, soln_file, EL, VL
     N = Nvals[row]
     soln_file = "soln_$N.jld2"
     if isfile(soln_file)
@@ -16,7 +16,7 @@ for row = [6]
         @printf("\t N = %d ...", N)
         start = time()
         Φ, Φ_det, pcg_its = simulations!(pts[row], solver, κ₀_vals, 
-                                         f_homogeneous, get_load_vector!, 
+                                         f, get_load_vector!, 
                                          pstore, estore, dstore, u₀_bent)
         elapsed = time() - start
         @printf(" in %d seconds.\n", elapsed)

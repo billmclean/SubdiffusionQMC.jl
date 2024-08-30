@@ -23,7 +23,7 @@ Nₜ = 150
 t = graded_mesh(Nₜ, γ, T)
 
 # PDE
-f_homogeneous(x, y, t) = 0.0
+f(x, y, t) = 1.0
 κ₀(x, y) = 0.1 * (2 + x * y) 
 u₀_bent(x, y) = 144 * (x^2 * (1 - x) * y^2 * (1 - y))
 

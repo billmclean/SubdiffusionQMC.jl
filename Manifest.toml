@@ -1,6 +1,6 @@
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.10.4"
+julia_version = "1.10.5"
 manifest_format = "2.0"
 project_hash = "2fa57c8af52b3ef208467935405dd154ff861e96"
 
@@ -614,11 +614,11 @@ uuid = "1a1011a3-84de-559e-8e89-a11a2f7dc383"
 
 [[deps.SimpleFiniteElements]]
 deps = ["Gmsh", "IterativeSolvers", "LinearAlgebra", "PyCall", "PyPlot", "SparseArrays", "StaticArrays", "Statistics", "SuiteSparse"]
-git-tree-sha1 = "4f13409b447e1eadb113eb4389705dc219681959"
+git-tree-sha1 = "2ac47240cd20447454e6e86c304baa2ac8690717"
 repo-rev = "main"
 repo-url = "https://github.com/billmclean/SimpleFiniteElements.jl"
 uuid = "125632e7-bef4-4648-bc1f-71b5efcf8068"
-version = "0.1.0"
+version = "0.1.1"
 
 [[deps.Sockets]]
 uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
@@ -807,7 +807,7 @@ version = "1.1.2+0"
 [[deps.libblastrampoline_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "8e850b90-86db-534c-a0d3-1478176c7d93"
-version = "5.8.0+1"
+version = "5.11.0+0"
 
 [[deps.libpng_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Zlib_jll"]
