@@ -74,7 +74,7 @@ x₂_vals = range(0, 1, N₂)
 κ₀_vals = Float64[ κ₀(x, y) for x in x₁_vals, y in x₂_vals ]
 
 msg1 = """
-Example $exno.  Solving IBVP with non-conforming finite elements.
+Example $exno.  Solving IBVP with finite elements.
 Fractional time derivative of order α = $α.
 Solver is $solver with tol = $pcg_tol.
 Employing $(Threads.nthreads()) threads.
