@@ -1,7 +1,7 @@
 name = "SubdiffusionQMC"
 uuid = "072f8508-fc03-4b3a-bf7a-215682c52175"
 authors = ["William McLean <w.mclean@unsw.edu.au>"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 ArgCheck = "dce04be8-c92d-5529-be00-80e4d2c0e197"
